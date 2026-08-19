@@ -1,0 +1,16 @@
+[Unit]
+Description=RK3588 report capture monitor web service
+After=network-online.target rk3588-camera-stream.service rk3588-report-camera-trigger.service rk3588-gateway.service
+Wants=network-online.target rk3588-report-camera-trigger.service rk3588-gateway.service
+Requires=rk3588-camera-stream.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/rk3588_kvm
+ExecStart=/usr/bin/python3 /opt/rk3588_kvm/camera_ocr_overlay.py --host 0.0.0.0 --port 8893 --display-rotation 90 --status-file /run/rk3588-report-parser/camera-trigger.json --result-file /run/rk3588-report-parser/verified-identifier.json --full-text-result-file /run/rk3588-report-parser/verified-full-text.json --patient-result-file /run/rk3588-report-parser/verified-patient.json --patient-metadata-file /run/rk3588-report-parser/verified-patient.meta.json --rules-file /var/lib/rk3588-report-parser/active_identifier_rules.json --capture-settings-file /var/lib/rk3588-report-parser/camera_capture_settings.json --trigger-environment-file /var/lib/rk3588-report-parser/camera-capture.env --gateway-patient-endpoint http://127.0.0.1:8080/patient/query --gateway-scan-endpoint http://127.0.0.1:8080/scan
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

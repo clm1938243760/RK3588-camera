@@ -1,0 +1,17 @@
+[Unit]
+Description=RK3588 IMX415 1080p30 MPP H.264 camera stream
+After=rk3588-camera-mediamtx.service
+Requires=rk3588-camera-mediamtx.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/rk3588_kvm
+ExecStartPre=/usr/bin/test -e /dev/video23
+ExecStart=/opt/rk3588_kvm/camera_stream_mpp.sh
+Restart=always
+RestartSec=1
+TimeoutStopSec=8
+
+[Install]
+WantedBy=multi-user.target

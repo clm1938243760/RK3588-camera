@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*.log
+*.tmp
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.playwright-cli/
+output/
+mediamtx_*_linux_arm64.tar.gz
+

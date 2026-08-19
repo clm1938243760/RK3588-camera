@@ -1,0 +1,16 @@
+[Unit]
+Description=RK3588 CSI camera MediaMTX WebRTC server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/rk3588_kvm
+ExecStart=/usr/local/bin/mediamtx /opt/rk3588_kvm/camera_mediamtx.yml
+Restart=always
+RestartSec=1
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
