@@ -1,0 +1,8 @@
+# Create a dedicated Python 3.10+ environment for desktop inference.
+# Install the CUDA-enabled PyTorch build separately using the official PyTorch
+# selector so that it matches the Windows NVIDIA driver and CUDA runtime.
+-r requirements.txt
+accelerate>=0.34,<2
+safetensors>=0.4,<1
+tokenizers>=0.20,<1
+transformers>=4.45,<5

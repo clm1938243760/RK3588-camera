@@ -1,0 +1,70 @@
+{
+  "title": "\u98df\u9053\u52a8\u529b",
+  "windowTitleLocation": "0, 0, 1920, 1080",
+  "eventClassList": [
+    {
+      "index": 0,
+      "clickType": 1,
+      "text": "ming",
+      "x": 313,
+      "y": 281,
+      "clickLogStr": "input given name"
+    },
+    {
+      "index": 1,
+      "clickType": 1,
+      "text": "xing",
+      "x": 313,
+      "y": 341,
+      "clickLogStr": "input family name"
+    },
+    {
+      "index": 2,
+      "clickType": 1,
+      "text": "patient_id",
+      "x": 313,
+      "y": 371,
+      "clickLogStr": "input patient id"
+    },
+    {
+      "index": 3,
+      "clickType": 1,
+      "text": "age",
+      "x": 313,
+      "y": 401,
+      "clickLogStr": "input age"
+    },
+    {
+      "index": 4,
+      "clickType": 0,
+      "text": null,
+      "x": 402,
+      "y": 431,
+      "clickLogStr": "open sex dropdown"
+    },
+    {
+      "index": 5,
+      "clickType": 7,
+      "text": "\u7537",
+      "x": 223,
+      "y": 453,
+      "clickLogStr": "select male"
+    },
+    {
+      "index": 6,
+      "clickType": 7,
+      "text": "\u5973",
+      "x": 223,
+      "y": 471,
+      "clickLogStr": "select female"
+    },
+    {
+      "index": 7,
+      "clickType": 0,
+      "text": null,
+      "x": 167,
+      "y": 481,
+      "clickLogStr": "confirm patient form"
+    }
+  ]
+}

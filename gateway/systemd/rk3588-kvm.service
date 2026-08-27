@@ -1,0 +1,19 @@
+[Unit]
+Description=RK3588 HDMI RX KVM
+After=network-online.target gadget-mode.service
+Wants=network-online.target gadget-mode.service
+
+[Service]
+Type=forking
+PIDFile=/tmp/rk3588_kvm.pid
+ExecStart=/opt/rk3588_kvm/run.sh
+ExecStop=/opt/rk3588_kvm/stop.sh
+Restart=always
+RestartSec=3
+TimeoutStartSec=30
+TimeoutStopSec=15
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

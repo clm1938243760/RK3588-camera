@@ -1,0 +1,13 @@
+[Unit]
+Description=RK3588 dual UDC USB gadget
+After=systemd-modules-load.service
+Before=rk3588-gateway.service
+Conflicts=usbdevice.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /opt/rk3588_gateway/scripts/setup_usb_printer_gadget.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,5 @@
+# RK3588 Debian 11 / Python 3.9 ARM64 runtime verified on 2026-08-18.
+numpy==1.23.5 \
+    --hash=sha256:bf837dc63ba5c06dc8797c398db1e223a466c7ece27a1f7b5232ba3466aafe3d
+onnxruntime==1.17.3 \
+    --hash=sha256:3ff2dc012bd930578aff5232afd2905bf16620815f36783a941aafabf94b3702

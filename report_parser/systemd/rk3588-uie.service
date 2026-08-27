@@ -1,0 +1,25 @@
+[Unit]
+Description=RK3588 camera OCR patient UIE shadow service
+After=network.target rk3588-report-camera-trigger.service
+Wants=rk3588-report-camera-trigger.service
+
+[Service]
+Type=simple
+User=linaro
+Group=linaro
+WorkingDirectory=/opt/rk3588_report_parser
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/rk3588_report_parser/.venv-uie/bin/python -m rk3588_report_parser.uie_web_server --host 127.0.0.1 --port 8030 --engine rknn --model uie-base --rknn-model /opt/rk3588_report_parser/runtime/uie-base-rknn/uie-base-seq256-fp16.rknn --rknn-vocab /opt/rk3588_report_parser/runtime/uie-base-onnx/vocab.txt --rknn-sequence-length 256 --schema /var/lib/rk3588-report-parser/uie/active_uie_schema.json --result-file /run/rk3588-report-parser/uie-patient.json --camera-result-file /run/rk3588-report-parser/verified-full-text.json --camera-poll-seconds 0.5
+Restart=on-failure
+RestartSec=3
+Nice=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/run/rk3588-report-parser /var/lib/rk3588-report-parser/uie
+MemoryMax=2300M
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

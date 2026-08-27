@@ -1,0 +1,17 @@
+[Unit]
+Description=RK3588 Headless Gateway
+After=network-online.target rk3588-c0-hid.service
+Wants=network-online.target rk3588-c0-hid.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/rk3588_gateway
+Environment=PYTHONPATH=/opt/rk3588_gateway/src
+ExecStart=/opt/rk3588_gateway/.venv/bin/python -m rk3588_gateway.main --config /opt/rk3588_gateway/config.yaml
+Restart=always
+RestartSec=3
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

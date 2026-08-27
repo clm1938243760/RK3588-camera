@@ -1,0 +1,15 @@
+[Unit]
+Description=RK3588 Framebuffer Status Display
+After=network-online.target rk3588-report-center.service
+Wants=network-online.target rk3588-report-center.service
+
+[Service]
+Type=simple
+ExecStart=/opt/rk3588_gateway/.venv/bin/python /opt/rk3588_gateway/scripts/fb_status.py --output ili9488 --spidev /dev/spidev3.0 --dc-gpio 133 --reset-gpio -1 --cs-gpio 134 --width 480 --height 320 --rotate 270 --spi-speed 4000000 --color-order rgb --pixel-format 18 --invert off --interval 0.1 --state-file /run/rk3588-gateway/display-state.json --camera-status-file /run/rk3588-report-parser/camera-trigger.json --camera-status-url http://127.0.0.1:8893/api/status
+Restart=always
+RestartSec=3
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

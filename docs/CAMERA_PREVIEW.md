@@ -1,93 +1,101 @@
-# CSI Camera Preview
+# CSI Camera Preview and OCR Monitor
 
-This is a standalone low-latency preview for the CSI camera. It does not use
-the HDMI RX device or the MediaMTX process owned by the KVM service.
-
-## Data Path
+## Data Paths
 
 ```text
-IMX415 -> /dev/video23 ISP selfpath -> 1920x1080 NV12 -> MPP H.264 -> RTP
-      -> local Camera MediaMTX -> WebRTC browser or RTSP client
+IMX415 -> /dev/video23 ISP selfpath, full 3840x2160 sensor crop
+      -> hardware-scaled 1920x1080 NV12
+      -> MPP H.264 30 FPS -> RTP -> MediaMTX -> WebRTC browser
+
+IMX415 -> /dev/video22 ISP mainpath, 3840x2160 NV12
+      -> software JPEG at 5 FPS
+      -> /tmp/rk3588_camera_ocr_*.jpg
+      -> DocAligner and persistent RKNN PP-OCR
 ```
 
-`/dev/video23` is the RKISP hardware-scaled selfpath for the IMX415 camera.
-The 1080p30 stream is used because browser-side 4K decoding caused visible
-frame pacing stalls even though the board encoder remained healthy.
+The two paths have different owners. The WebRTC stream never queues 4K OCR
+frames, and the OCR process never restarts or changes video encoding settings.
 
-The default quality profile uses 12 Mbps VBR with a 20 Mbps peak and limits the
-worst quantizer to QP 26. This preserves document text and fine edges better
-than the earlier 6 Mbps/QP 32 profile while keeping a stable 30 FPS.
+## Preview Geometry
 
-## Start
+The preview capture uses `v4l2-ctl` with an explicit full-sensor selection
+before streaming. On this driver, GStreamer's `v4l2src` resets the crop and
+produces a roughly 2x zoom. The selected `/dev/video23` path keeps the complete
+sensor field while the ISP scales it to 1920x1080, so the preview and OCR paper
+geometry match.
 
-The persistent services start automatically after installation:
+The default encoder is 1080p30 H.264 VBR, 12 Mbps target, 20 Mbps peak, and a
+worst quantizer of QP 26. Browser-side 4K decoding is intentionally avoided
+because it caused visible frame-pacing stalls.
+
+## Full-Text Mode
+
+The 8893 monitor is started with `--text-only`:
+
+```text
+paper stable for 0.5 seconds
+-> collect two 4K frames
+-> select the sharpest valid frame
+-> one full-page OCR
+-> up to three regional refinements from the second-best frame
+-> display full text and evidence boxes
+```
+
+The page exposes `collecting_frames`, `ocr_primary`, `ocr_refining`, and
+`completed` stages. Review blocks use a warning color and preserve OCR
+alternatives; the displayed primary text is never silently corrected.
+
+Identifier rules, patient query controls, patient JSON, and HID auto-entry are
+hidden and inactive in this mode. The process does not instantiate their
+workers. The compatibility code remains in `camera_ocr_overlay.py` for a later
+mode switch, but it is outside the current deployment.
+
+## APIs
+
+```text
+GET /api/status  paper, stage, counts, quality, service status
+GET /api/result  current matching schema-v2 OCR document
+GET /api/config  display and OCR rotation compatibility settings
+GET /            live monitor page
+```
+
+`/api/result` returns text only when the result `capture_id` matches the live
+paper. It includes every OCR block's `source_index`, original `box` and
+`polygon`, normalized geometry, confidence, recognition source, and
+alternatives. Removing the paper immediately makes the endpoint return no
+current document.
+
+The last restricted result remains at:
+
+```text
+/run/rk3588-report-parser/verified-full-text.json
+```
+
+The writer uses an atomic replacement and mode `0600`. `/run` is cleared by
+reboot. No source report image is retained.
+
+## Start and Inspect
 
 ```bash
-sudo systemctl enable --now rk3588-camera-mediamtx.service rk3588-camera-stream.service
+sudo systemctl enable --now rk3588-camera-mediamtx.service \
+  rk3588-camera-stream.service \
+  rk3588-camera-ocr-snapshots.service \
+  rk3588-camera-ocr-overlay.service
+
+systemctl status rk3588-camera-mediamtx.service \
+  rk3588-camera-stream.service \
+  rk3588-camera-ocr-snapshots.service \
+  rk3588-camera-ocr-overlay.service --no-pager
 ```
 
-Service status:
-
-```bash
-systemctl status rk3588-camera-mediamtx.service rk3588-camera-stream.service --no-pager
-```
-
-For a temporary manual session instead, use:
-
-```bash
-sudo /opt/rk3588_kvm/start_camera_preview.sh
-```
-
-Open the WebRTC player in a browser on the same network:
+Open:
 
 ```text
 http://<board-ip>:8891/camera
-```
-
-Open the live report-capture monitor at:
-
-```text
 http://<board-ip>:8893/
 ```
 
-The stream pipeline writes latest-only JPEG snapshots for the independent
-DocAligner trigger. The monitor reads the trigger status file and draws the
-paper quadrilateral, stability progress, A/B capture progress, and final
-verification state over the 30 FPS WebRTC video. It does not run another OCR
-worker and never includes the extracted identifier value in its public status.
-
-After the A/B identifier match, the monitor has two independent actions:
-
-```text
-Patient query  -> POST http://127.0.0.1:8080/patient/query -> patient JSON
-Auto entry     -> POST http://127.0.0.1:8080/scan          -> HID workflow
-```
-
-Both actions have separate switches, deduplication state, and retries. The
-patient query route is loopback-only and does not queue a scan event or start
-HID. The patient response keeps the upstream `code`, `data`, `msg`, and
-`success` envelope and every returned record.
-
-The current patient response is available while the matching report remains
-active:
-
-```bash
-curl -s http://127.0.0.1:8893/api/patient
-```
-
-The last response is atomically retained for local consumers with mode `0600`:
-
-```text
-/run/rk3588-report-parser/verified-patient.json
-/run/rk3588-report-parser/verified-patient.meta.json
-```
-
-Only the metadata file contains `capture_id`; the patient JSON itself remains
-schema-compatible with the hospital patient API. A metadata mismatch makes
-the web endpoint return `PENDING`, preventing a stale patient from being paired
-with a new report.
-
-An RTSP client can use:
+RTSP remains available at:
 
 ```text
 rtsp://<board-ip>:8555/camera
@@ -96,8 +104,25 @@ rtsp://<board-ip>:8555/camera
 ## Stop
 
 ```bash
-sudo systemctl stop rk3588-camera-stream.service rk3588-camera-mediamtx.service
+sudo systemctl stop rk3588-camera-stream.service \
+  rk3588-camera-ocr-snapshots.service \
+  rk3588-camera-mediamtx.service
 ```
 
-The camera preview has its own local MediaMTX ports and PID files, so starting
-or stopping it does not restart the HDMI KVM stream.
+Stopping preview services does not touch the HDMI KVM MediaMTX instance.
+
+## Current Board Check
+
+One physical report completed with:
+
+```text
+historical three-frame capture  553 ms
+primary OCR          2698 ms
+regional refinement 2014 ms
+total                5174 ms
+result               57 blocks, review_required
+```
+
+The monitor rendered the full camera field, paper quadrilateral, OCR boxes,
+and full text without browser console errors. The WebRTC publisher remained
+ready and available memory was about 2.7 GiB.

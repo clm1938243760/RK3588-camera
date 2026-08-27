@@ -1,0 +1,4 @@
+aiohttp==3.8.6
+evdev==1.7.1
+PyYAML==6.0.1
+Pillow==9.5.0

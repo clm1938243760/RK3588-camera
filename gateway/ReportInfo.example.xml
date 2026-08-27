@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<UploadReportInfo>
+  <DeviceName>Example Medical Device</DeviceName>
+  <DeviceCode>DEVICE-001</DeviceCode>
+  <IP>127.0.0.1</IP>
+  <Mac>00:00:00:00:00:00</Mac>
+  <TargetFolder>/reports</TargetFolder>
+  <ExamDoct>Example Operator</ExamDoct>
+  <ExamDoctCode>OPERATOR-001</ExamDoctCode>
+  <ReviewMode>0</ReviewMode>
+  <IsConvert>0</IsConvert>
+  <IsHideMergeApplyForm>0</IsHideMergeApplyForm>
+  <IsCoverReview>0</IsCoverReview>
+  <ShowAllApply>0</ShowAllApply>
+</UploadReportInfo>

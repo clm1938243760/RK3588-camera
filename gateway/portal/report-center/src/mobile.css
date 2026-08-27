@@ -1,0 +1,44 @@
+@media (max-width: 600px) {
+  .app-header {
+    padding: 0 12px;
+  }
+
+  .app-header > div:first-child span,
+  .header-right span {
+    display: none;
+  }
+
+  .app-header strong {
+    font-size: 16px;
+  }
+
+  .header-right {
+    margin-left: auto;
+  }
+
+  aside,
+  .el-menu {
+    scrollbar-width: none;
+  }
+
+  aside::-webkit-scrollbar,
+  .el-menu::-webkit-scrollbar {
+    display: none;
+  }
+
+  .table-band {
+    overflow-x: auto;
+  }
+
+  .table-band .el-table {
+    min-width: 780px;
+  }
+
+  .page-header h1 {
+    font-size: 19px;
+  }
+
+  .el-dialog {
+    width: calc(100% - 24px) !important;
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "title": "新建患者",
+  "windowTitleLocation": "0, 0, 436, 489",
+  "eventClassList": [
+    {
+      "index": 0,
+      "clickType": 0,
+      "text": null,
+      "x": 243,
+      "y": 82,
+      "clickLogStr": "在 (243,82) 位置,点击了鼠标左键"
+    },
+    {
+      "index": 1,
+      "clickType": 1,
+      "text": "patient_id",
+      "x": 243,
+      "y": 82,
+      "clickLogStr": "在 (243,82) 位置,发送了字段"
+    },
+    {
+      "index": 2,
+      "clickType": 0,
+      "text": null,
+      "x": 219,
+      "y": 149,
+      "clickLogStr": "在 (219,149) 位置,点击了鼠标左键"
+    },
+    {
+      "index": 3,
+      "clickType": 1,
+      "text": "patient_name",
+      "x": 219,
+      "y": 149,
+      "clickLogStr": "在 (219,149) 位置,发送了字段"
+    },
+    {
+      "index": 4,
+      "clickType": 0,
+      "text": null,
+      "x": 210,
+      "y": 212,
+      "clickLogStr": "在 (210,212) 位置,点击了鼠标左键"
+    },
+    {
+      "index": 5,
+      "clickType": 7,
+      "text": "性别:男",
+      "x": 209,
+      "y": 238,
+      "clickLogStr": "在 (209,238) 位置,单选按钮开始"
+    },
+    {
+      "index": 6,
+      "clickType": 7,
+      "text": "性别:女",
+      "x": 206,
+      "y": 254,
+      "clickLogStr": "在 (206,254) 位置,单选按钮开始"
+    },
+    {
+      "index": 7,
+      "clickType": 0,
+      "text": null,
+      "x": 199,
+      "y": 286,
+      "clickLogStr": "在 (199,286) 位置,点击了鼠标左键"
+    },
+    {
+      "index": 8,
+      "clickType": 1,
+      "text": "age",
+      "x": 199,
+      "y": 286,
+      "clickLogStr": "在 (199,286) 位置,发送了字段"
+    },
+    {
+      "index": 9,
+      "clickType": 0,
+      "text": null,
+      "x": 100,
+      "y": 443,
+      "clickLogStr": "在 (100,443) 位置,点击了鼠标左键"
+    }
+  ]
+}

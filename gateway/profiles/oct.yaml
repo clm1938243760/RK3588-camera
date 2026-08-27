@@ -1,0 +1,11 @@
+id: oct
+device_type: "OCT"
+software: "OCT"
+flow: oct
+hid_input:
+  template_path: "/opt/rk3588_gateway/MarkInfo_OCT_Config_100.json"
+vision:
+  enabled: true
+  close_msc_popup_when_detected: false
+  wait_after_open: 3.0
+  max_runtime: 120.0

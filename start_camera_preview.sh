@@ -5,20 +5,22 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 MEDIAMTX_BIN="${CAMERA_MEDIAMTX_BIN:-/usr/local/bin/mediamtx}"
 MEDIAMTX_PID_FILE="${CAMERA_MEDIAMTX_PID_FILE:-/tmp/rk3588_camera_mediamtx.pid}"
 STREAM_PID_FILE="${CAMERA_STREAM_PID_FILE:-/tmp/rk3588_camera_stream.pid}"
+OCR_PID_FILE="${CAMERA_OCR_PID_FILE:-/tmp/rk3588_camera_ocr_snapshots.pid}"
 MEDIAMTX_LOG_FILE="${CAMERA_MEDIAMTX_LOG_FILE:-/tmp/rk3588_camera_mediamtx.log}"
 STREAM_LOG_FILE="${CAMERA_STREAM_LOG_FILE:-/tmp/rk3588_camera_stream.log}"
+OCR_LOG_FILE="${CAMERA_OCR_LOG_FILE:-/tmp/rk3588_camera_ocr_snapshots.log}"
 
 if [[ "$(id -u)" -ne 0 ]]; then
   echo "Please run with sudo: sudo $ROOT/start_camera_preview.sh"
   exit 1
 fi
 
-for dev in /dev/video23; do
+for dev in /dev/video22 /dev/video23; do
   [[ -e "$dev" ]] || { echo "Missing $dev"; exit 1; }
 done
 [[ -x "$MEDIAMTX_BIN" ]] || { echo "MediaMTX not found: $MEDIAMTX_BIN"; exit 1; }
 
-for pid_path in "$MEDIAMTX_PID_FILE" "$STREAM_PID_FILE"; do
+for pid_path in "$MEDIAMTX_PID_FILE" "$STREAM_PID_FILE" "$OCR_PID_FILE"; do
   [[ -f "$pid_path" ]] || continue
   pid="$(cat "$pid_path" 2>/dev/null || true)"
   if [[ "$pid" =~ ^[0-9]+$ ]] && kill -0 "$pid" 2>/dev/null; then
@@ -49,8 +51,13 @@ fi
 nohup "$ROOT/camera_stream_watchdog.sh" >>"$STREAM_LOG_FILE" 2>&1 &
 echo "$!" >"$STREAM_PID_FILE"
 
+: >"$OCR_LOG_FILE"
+nohup "$ROOT/camera_ocr_snapshots.sh" >>"$OCR_LOG_FILE" 2>&1 &
+echo "$!" >"$OCR_PID_FILE"
+
 IP="$(hostname -I | awk '{print $1}')"
 echo "CSI camera preview started."
 echo "WebRTC: http://${IP}:8891/camera"
 echo "RTSP:   rtsp://${IP}:8555/camera"
 echo "Logs:   $STREAM_LOG_FILE"
+echo "OCR:    $OCR_LOG_FILE"

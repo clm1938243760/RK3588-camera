@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>患者信息结构化</title>
+  <link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>患者信息结构化</h1>
+      <p id="runtimeText">本地服务连接中</p>
+    </div>
+    <span id="serviceState" class="service-state">检查中</span>
+  </header>
+
+  <main>
+    <section class="toolbar" aria-label="识别工具栏">
+      <label class="file-button" for="fileInput">选择图片</label>
+      <input id="fileInput" type="file" accept="image/jpeg,image/png">
+      <span id="fileName" class="file-name">未选择文件</span>
+      <button id="latestButton" class="secondary" type="button">摄像头结果</button>
+      <input id="tokenInput" class="token-input" type="password" autocomplete="off" placeholder="访问令牌">
+      <button id="schemaButton" class="secondary" type="button">字段配置</button>
+      <button id="parseButton" type="button" disabled>开始识别</button>
+      <button id="exportPatientButton" class="secondary" type="button" disabled>患者 JSON</button>
+      <button id="exportEvidenceButton" class="secondary" type="button" disabled>证据 JSON</button>
+    </section>
+
+    <section class="workspace">
+      <div class="document-pane">
+        <div id="imageStage" class="image-stage empty">
+          <span id="emptyText">等待申请单图片</span>
+          <div id="imageWrap" class="image-wrap" hidden>
+            <img id="previewImage" alt="申请单预览">
+            <svg id="overlay" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </div>
+        </div>
+        <div class="text-output">
+          <div class="section-title"><h2>OCR 全文</h2><span id="blockCount">0 个文本块</span></div>
+          <pre id="ocrText">暂无内容</pre>
+        </div>
+      </div>
+
+      <aside class="result-pane" aria-live="polite">
+        <div class="result-header">
+          <div><span class="label">识别状态</span><strong id="resultStatus">等待识别</strong></div>
+          <span id="durationText">--</span>
+        </div>
+
+        <section class="patient-band">
+          <span class="label">当前患者</span>
+          <strong id="patientName">--</strong>
+          <span id="patientIdentity">--</span>
+        </section>
+
+        <section class="result-section">
+          <h2>结构化字段</h2>
+          <div id="fieldList" class="field-list"><p class="muted">暂无结果</p></div>
+        </section>
+
+        <section id="reviewSection" class="result-section review-section" hidden>
+          <h2>复核提示</h2>
+          <ul id="reviewList" class="review-list"></ul>
+        </section>
+
+        <section class="result-section">
+          <h2>患者接口 JSON</h2>
+          <pre id="patientJson" class="json-output">暂无结果</pre>
+        </section>
+
+        <section class="result-section compact">
+          <h2>运行信息</h2>
+          <dl id="metricsList" class="metrics"></dl>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <dialog id="schemaDialog" class="schema-dialog">
+    <form method="dialog" class="schema-dialog-body">
+      <header class="schema-header">
+        <div><h2>字段分类配置</h2><span id="schemaModel"></span></div>
+        <button id="closeSchemaButton" class="icon-button" type="button" title="关闭" aria-label="关闭">×</button>
+      </header>
+      <div class="schema-table-wrap">
+        <table class="schema-table">
+          <thead><tr><th>患者字段</th><th>主要提示词</th><th>提示词别名</th><th>最低置信度</th><th>必填</th></tr></thead>
+          <tbody id="schemaRows"></tbody>
+        </table>
+      </div>
+      <footer class="schema-actions">
+        <span id="schemaState"></span>
+        <button id="cancelSchemaButton" class="secondary" type="button">取消</button>
+        <button id="saveSchemaButton" type="button">保存配置</button>
+        <button id="saveAndParseSchemaButton" type="button" disabled>保存并重新识别</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <script src="/assets/app.js"></script>
+</body>
+</html>

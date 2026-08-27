@@ -1,0 +1,94 @@
+{
+  "fields": [
+    {
+      "field_key": "patient_name",
+      "label": "姓名",
+      "position": "right_then_below",
+      "char_type": "any",
+      "fixed_length": 0,
+      "min_ocr_score": 0.65,
+      "max_distance": 180,
+      "required": false
+    },
+    {
+      "field_key": "patient_id",
+      "label": "卡号",
+      "position": "right_then_below",
+      "char_type": "alnum",
+      "fixed_length": 0,
+      "min_ocr_score": 0.65,
+      "max_distance": 180,
+      "required": false
+    },
+    {
+      "field_key": "his_exam_no",
+      "label": "处方/申请号",
+      "position": "right_then_below",
+      "char_type": "alnum",
+      "fixed_length": 0,
+      "min_ocr_score": 0.65,
+      "max_distance": 180,
+      "required": false
+    },
+    {
+      "field_key": "report_no",
+      "label": "报告号",
+      "position": "right_then_below",
+      "char_type": "alnum",
+      "fixed_length": 0,
+      "min_ocr_score": 0.65,
+      "max_distance": 180,
+      "required": false
+    },
+    {
+      "field_key": "exam_item",
+      "label": "项目名称",
+      "position": "right_then_below",
+      "char_type": "any",
+      "fixed_length": 0,
+      "min_ocr_score": 0.65,
+      "max_distance": 180,
+      "required": false
+    },
+    {
+      "field_key": "sex",
+      "label": "性别",
+      "position": "right_then_below",
+      "char_type": "any",
+      "fixed_length": 0,
+      "min_ocr_score": 0.65,
+      "max_distance": 120,
+      "required": false
+    },
+    {
+      "field_key": "age",
+      "label": "年龄",
+      "position": "right_then_below",
+      "char_type": "any",
+      "fixed_length": 0,
+      "min_ocr_score": 0.65,
+      "max_distance": 120,
+      "required": false
+    },
+    {
+      "field_key": "birthday",
+      "label": "出生日期",
+      "position": "right_then_below",
+      "char_type": "any",
+      "fixed_length": 0,
+      "min_ocr_score": 0.65,
+      "max_distance": 180,
+      "required": false
+    },
+    {
+      "field_key": "name_phonetic",
+      "label": "患者姓名拼音",
+      "position": "right_then_below",
+      "char_type": "any",
+      "fixed_length": 0,
+      "min_ocr_score": 0.65,
+      "max_distance": 180,
+      "required": false
+    }
+  ]
+}

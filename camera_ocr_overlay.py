@@ -93,6 +93,7 @@ body.rotation-270 #video,body.rotation-270 #overlay{transform:rotate(90deg)}
 .ocrAction:disabled{cursor:default;opacity:.35}
 #ocrText{flex:1;margin:0;padding:12px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;color:#e5e7eb;font-family:Arial,"Microsoft YaHei",sans-serif;font-size:13px;line-height:1.75;user-select:text}
 #ocrText.waiting{color:#94a3b8}
+body.text-only .textOnlyHidden{display:none!important}
 @media(max-width:900px){#ocrPanel{left:14px;right:14px;top:auto;bottom:14px;width:auto;min-width:0;height:min(34vh,320px)}#panel{max-height:calc(66vh - 42px);overflow:auto}}
 </style>
 </head>
@@ -102,8 +103,8 @@ body.rotation-270 #video,body.rotation-270 #overlay{transform:rotate(90deg)}
   <div id="headline"><span id="dot"></span><span id="statusText">正在连接</span><button id="settingsButton" type="button" aria-expanded="false">配置</button></div>
   <div id="detail">等待检测服务状态</div>
   <div id="progress"><div id="progressBar"></div></div>
-  <div id="metrics"><span>视频</span><span id="videoState">连接中</span><span>纸张置信度</span><span id="confidence">--</span><span>检测耗时</span><span id="inference">--</span><span>A/B 采集</span><span id="burst">--</span><span>识别规则</span><span id="ruleText">读取中</span><span>患者查询</span><span id="patientQueryText">读取中</span><span>自动录入</span><span id="autoEntryText">读取中</span></div>
-  <div id="resultBand">
+  <div id="metrics"><span>视频</span><span id="videoState">连接中</span><span>纸张置信度</span><span id="confidence">--</span><span>检测耗时</span><span id="inference">--</span><span>清晰帧采集</span><span id="burst">--</span><span class="textOnlyHidden">识别规则</span><span class="textOnlyHidden" id="ruleText">读取中</span><span class="textOnlyHidden">患者查询</span><span class="textOnlyHidden" id="patientQueryText">读取中</span><span class="textOnlyHidden">自动录入</span><span class="textOnlyHidden" id="autoEntryText">读取中</span></div>
+  <div id="resultBand" class="textOnlyHidden">
     <div id="resultHeader"><span>最终号码</span><span id="verificationText">等待 A/B 验证</span></div>
     <div id="identifier" class="waiting">尚未生成</div>
     <div id="resultHint">验证通过后自动显示；取走纸张后立即隐藏</div>
@@ -112,19 +113,20 @@ body.rotation-270 #video,body.rotation-270 #overlay{transform:rotate(90deg)}
   <div id="settings">
     <label class="settingRow"><span>网页视角</span><select id="displayRotation"><option value="0">0°（当前方向）</option><option value="90">90°</option><option value="180">180°</option><option value="270">270°</option></select></label>
     <label class="settingRow"><span>OCR 视角</span><select id="ocrRotation"><option value="0">0°（当前方向）</option><option value="90">90°</option><option value="180">180°</option><option value="270">270°</option></select></label>
-    <label class="settingRow"><span>目标字符数</span><input id="matchLength" type="number" min="1" max="64" step="1" inputmode="numeric"></label>
-    <label class="settingRow"><span>字符类型</span><select id="matchCharset"><option value="alphanumeric">字母 + 数字</option><option value="digits">纯数字</option></select></label>
-    <label class="settingRow"><span>患者查询</span><span class="settingToggle"><input id="patientQueryEnabled" type="checkbox"><span>生成JSON</span></span></label>
-    <label class="settingRow"><span>自动录入</span><span class="settingToggle"><input id="autoEntryEnabled" type="checkbox"><span>启动HID</span></span></label>
+    <label class="settingRow textOnlyHidden"><span>目标字符数</span><input id="matchLength" type="number" min="1" max="64" step="1" inputmode="numeric"></label>
+    <label class="settingRow textOnlyHidden"><span>字符类型</span><select id="matchCharset"><option value="alphanumeric">字母 + 数字</option><option value="digits">纯数字</option></select></label>
+    <label class="settingRow textOnlyHidden"><span>患者查询</span><span class="settingToggle"><input id="patientQueryEnabled" type="checkbox"><span>生成JSON</span></span></label>
+    <label class="settingRow textOnlyHidden"><span>自动录入</span><span class="settingToggle"><input id="autoEntryEnabled" type="checkbox"><span>启动HID</span></span></label>
     <button id="saveSettings" type="button">保存配置</button>
     <div id="settingsMessage">0°代表当前正确方向；OCR配置从下一张纸生效</div>
   </div>
 </section>
 <aside id="ocrPanel" aria-live="polite">
   <div id="ocrHeader"><span id="ocrTitle">全文识别</span><span id="ocrSummary">等待报告单</span><button id="copyText" class="ocrAction" type="button" disabled>复制</button><button id="exportText" class="ocrAction" type="button" disabled>导出</button></div>
-  <pre id="ocrText" class="waiting">识别验证通过后显示全部文字</pre>
+  <pre id="ocrText" class="waiting">报告单稳定后显示全部文字</pre>
 </aside>
 <script>
+const textOnly=__TEXT_ONLY_JSON__;
 const video=document.getElementById("video");
 const canvas=document.getElementById("overlay");
 const ctx=canvas.getContext("2d");
@@ -161,6 +163,7 @@ let currentStage="absent";
 let currentDocument=null;
 let currentPatient=null;
 let lastStatus=null;
+let statusFailures=0;
 
 function applyDisplayRotation(value){
   const offset=[0,90,180,270].includes(Number(value))?Number(value):0;
@@ -174,8 +177,10 @@ function fillConfig(config){
   ocrRotation.value=String(config.ocr_rotation??0);
   matchLength.value=String(config.match?.length??16);
   matchCharset.value=config.match?.charset||"alphanumeric";
-  patientQueryEnabled.checked=Boolean(config.patient_query_enabled);
-  autoEntryEnabled.checked=Boolean(config.auto_entry_enabled);
+  patientQueryEnabled.checked=textOnly?false:Boolean(config.patient_query_enabled);
+  autoEntryEnabled.checked=textOnly?false:Boolean(config.auto_entry_enabled);
+  patientQueryEnabled.disabled=textOnly;
+  autoEntryEnabled.disabled=textOnly;
   applyDisplayRotation(displayRotation.value);
 }
 
@@ -201,8 +206,8 @@ async function persistConfig(){
         display_rotation:Number(displayRotation.value),
         ocr_rotation:Number(ocrRotation.value),
         match:{length:length,charset:matchCharset.value},
-        patient_query_enabled:patientQueryEnabled.checked,
-        auto_entry_enabled:autoEntryEnabled.checked
+        patient_query_enabled:textOnly?false:patientQueryEnabled.checked,
+        auto_entry_enabled:textOnly?false:autoEntryEnabled.checked
       })
     });
     const result=await response.json();
@@ -248,8 +253,8 @@ function drawPaper(result){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   const points=result.active&&result.paper_detected&&Array.isArray(result.paper_corners)?result.paper_corners:[];
   if(points.length===4){
-    const accepted=result.capture_stage==="verified";
-    const rejected=result.capture_stage==="verification_rejected"||result.capture_stage==="ocr_error";
+    const accepted=result.capture_stage==="verified"||(result.capture_stage==="completed"&&result.full_text?.status==="accepted");
+    const rejected=result.capture_stage==="verification_rejected"||result.capture_stage==="ocr_error"||(result.capture_stage==="completed"&&["rejected","error"].includes(result.full_text?.status));
     ctx.lineWidth=Math.max(3,canvas.width/640);
     ctx.strokeStyle=accepted?"#22c55e":rejected?"#ef4444":"#22d3ee";
     ctx.fillStyle=accepted?"rgba(34,197,94,.08)":rejected?"rgba(239,68,68,.08)":"rgba(34,211,238,.07)";
@@ -291,19 +296,18 @@ function drawOcrBlocks(documentResult){
   for(const block of documentResult.blocks||[]){
     const box=block.normalized_box;
     if(!Array.isArray(box)||box.length!==4)continue;
-    const polygon=[
-      paperPoint(box[0]/1000,box[1]/1000,source),
-      paperPoint(box[2]/1000,box[1]/1000,source),
-      paperPoint(box[2]/1000,box[3]/1000,source),
-      paperPoint(box[0]/1000,box[3]/1000,source)
-    ];
+    const normalizedPolygon=Array.isArray(block.normalized_polygon)&&block.normalized_polygon.length>=4?block.normalized_polygon:[[box[0],box[1]],[box[2],box[1]],[box[2],box[3]],[box[0],box[3]]];
+    const polygon=normalizedPolygon.map(point=>paperPoint(point[0]/1000,point[1]/1000,source));
+    const uncertain=(block.score||0)<.70||(Array.isArray(block.alternatives)&&block.alternatives.length>0);
+    ctx.strokeStyle=uncertain?"#ef4444":"#fbbf24";
+    ctx.fillStyle=uncertain?"rgba(239,68,68,.07)":"rgba(251,191,36,.055)";
     ctx.beginPath();ctx.moveTo(polygon[0][0],polygon[0][1]);
     for(let i=1;i<polygon.length;i++)ctx.lineTo(polygon[i][0],polygon[i][1]);
     ctx.closePath();ctx.fill();ctx.stroke();
   }
 }
 
-function clearDocument(message="识别验证通过后显示全部文字"){
+function clearDocument(message="报告单稳定后显示全部文字"){
   currentDocument=null;
   ocrSummary.textContent="等待报告单";
   ocrText.textContent=message;
@@ -316,7 +320,8 @@ function clearDocument(message="识别验证通过后显示全部文字"){
 function renderDocument(documentResult){
   if(!documentResult||!documentResult.available){clearDocument("全文结果尚未就绪");return;}
   currentDocument=documentResult;
-  ocrSummary.textContent=`${documentResult.line_count||0} 行 · ${documentResult.item_count||0} 块 · ${Math.round((documentResult.mean_confidence||0)*100)}%`;
+  const review=documentResult.status==="review_required"?" · 需复核":"";
+  ocrSummary.textContent=`${documentResult.line_count||0} 行 · ${documentResult.item_count||0} 块 · ${Math.round((documentResult.mean_confidence||0)*100)}%${review}`;
   ocrText.textContent=documentResult.full_text||"";
   ocrText.className="";
   copyText.disabled=false;
@@ -326,10 +331,16 @@ function renderDocument(documentResult){
 
 function burstText(result){
   const current=result.burst||{};
+  if(result.text_only){
+    const target=result.burst_target_frames||current.target_frames||3;
+    if(result.capture_stage==="collecting_frames")return `${current.collected_frames||0}/${target}`;
+    if(["ocr_primary","ocr_refining","queued","completed"].includes(result.capture_stage))return `${target}/${target}`;
+    return "--";
+  }
   const a=result.burst_a||{};
   const b=result.burst_b||{};
-  if(result.capture_stage==="collecting_a")return `A ${current.collected_frames||0}/${current.target_frames||3}`;
-  if(result.capture_stage==="collecting_b")return `A 完成 · B ${current.collected_frames||0}/${current.target_frames||3}`;
+  if(result.capture_stage==="collecting_a")return `A ${current.collected_frames||0}/${current.target_frames||5}`;
+  if(result.capture_stage==="collecting_b")return `A 完成 · B ${current.collected_frames||0}/${current.target_frames||5}`;
   if(result.capture_stage==="verified")return "A = B";
   if(result.capture_stage==="verification_rejected")return "A ≠ B";
   if(a.ready&&b.ready)return "A、B 完成";
@@ -357,6 +368,7 @@ function clearPatient(message="等待患者查询"){
 }
 
 async function pollPatient(){
+  if(textOnly)return;
   if(["absent","tracking","inactive"].includes(currentStage)){
     if(currentPatient)clearPatient();
     window.setTimeout(pollPatient,500);
@@ -379,9 +391,7 @@ async function pollPatient(){
 
 async function pollResult(){
   if(["absent","tracking","inactive"].includes(currentStage)){
-    verificationText.textContent="等待 A/B 验证";
-    clearIdentifier("尚未生成");
-    resultHint.textContent="单号验证与全文识别独立运行";
+    if(!textOnly){verificationText.textContent="等待 A/B 验证";clearIdentifier("尚未生成");resultHint.textContent="单号验证与全文识别独立运行";}
     if(currentDocument)clearDocument();
     window.setTimeout(pollResult,400);
     return;
@@ -389,13 +399,13 @@ async function pollResult(){
   try{
     const response=await fetch("/api/result",{cache:"no-store"});
     const result=await response.json();
-    renderRule(result.rule);
-    if(result.identifier_available&&result.identifier){
+    if(!textOnly)renderRule(result.rule);
+    if(!textOnly&&result.identifier_available&&result.identifier){
       verificationText.textContent="A/B 完全一致";
       identifier.textContent=result.identifier;
       identifier.className="";
       resultHint.textContent="当前纸张已通过两次独立识别；取走后自动隐藏";
-    }else{
+    }else if(!textOnly){
       const verification=result.verification||{};
       verificationText.textContent=verification.status==="rejected"?"单号未通过":"等待 A/B 验证";
       clearIdentifier("单号尚未验证");
@@ -403,7 +413,7 @@ async function pollResult(){
     }
     if(result.document&&result.document.available)renderDocument(result.document);
     else if(currentDocument)clearDocument("正在生成全文结果");
-  }catch(error){clearIdentifier("结果接口暂不可用");clearDocument("全文结果接口暂不可用");resultHint.textContent="无法读取识别结果";}
+  }catch(error){if(!textOnly){clearIdentifier("结果接口暂不可用");resultHint.textContent="无法读取识别结果";}clearDocument("全文结果接口暂不可用");}
   window.setTimeout(pollResult,400);
 }
 
@@ -415,7 +425,7 @@ function renderStatus(result){
   currentStage=(result.active||serviceState==="busy")?(result.capture_stage||result.state):"inactive";
   if(["absent","tracking","inactive"].includes(currentStage)&&currentDocument)clearDocument();
   drawPaper(result);
-  renderRule(result.rule);
+  if(!textOnly)renderRule(result.rule);
   document.getElementById("confidence").textContent=result.paper_detected?`${Math.round((result.paper_confidence||0)*100)}%`:"--";
   document.getElementById("inference").textContent=result.paper_inference_ms!=null?`${result.paper_inference_ms.toFixed(1)} ms`:"--";
   document.getElementById("burst").textContent=burstText(result);
@@ -424,12 +434,22 @@ function renderStatus(result){
   const actionLabels={disabled:"关闭",clear_required:"请先取走当前纸张",waiting:"等待号码",armed:"下一张生效",sending:"处理中",sent:"已完成",error:"失败重试"};
   patientQueryText.textContent=patientQuery.state==="sent"?`已查询 ${patientQuery.record_count||0} 条`:(actionLabels[patientQuery.state]||(patientQuery.enabled?"等待号码":"关闭"));
   autoEntryText.textContent=actionLabels[autoEntry.state]||(autoEntry.enabled?"等待号码":"关闭");
-  const target=Math.max(.1,result.stable_target_seconds||.8);
+  const target=Math.max(.1,result.stable_target_seconds||.5);
   const progress=Math.max(0,Math.min(100,(result.stable_for||0)/target*100));
   progressBar.style.width=`${progress}%`;
   if(!result.active){
     if(serviceState==="busy"){
-      setStatus("","正在处理识别","OCR 运行时状态更新会短暂停顿，请保持纸张不动");
+      const busyLabels={
+        collecting_frames:["采集清晰画面","正在从两帧中选择最清晰画面"],
+        ocr_primary:["全文 OCR 处理中","正在执行一次整页文字识别，请保持纸张不动"],
+        ocr_refining:["低置信度区域复核","正在放大复核少量不清晰文字"],
+        collecting_a:["第一组 OCR 处理中","正在处理已选出的清晰画面，请保持纸张不动"],
+        collecting_b:["第二组 OCR 处理中","正在复核第二组清晰画面，请保持纸张不动"],
+        waiting_b:["准备第二组识别","第一组已完成，正在准备第二组五帧采集"],
+        locked:["OCR 识别处理中","正在检查画面中的文字，请保持纸张不动"]
+      };
+      const busy=busyLabels[currentStage]||["OCR 识别处理中","本地 OCR 正在计算，检测服务仍正常运行"];
+      setStatus("",busy[0],busy[1]);
     }else if(detectorUnitState==="activating"){
       setStatus("","检测服务正在启动","初始化相机和模型后会自动开始检测");
     }else if(detectorUnitState==="active"){
@@ -445,14 +465,19 @@ function renderStatus(result){
   }
   const stage=result.capture_stage||result.state;
   const labels={
-    absent:["等待报告单","把带号码的纸张放入画面"],
+    absent:["等待报告单","把报告单或带文字的局部放入画面"],
     tracking:["已检测到纸张","请保持不动，正在确认稳定"],
     locked:["纸张已锁定","正在检查画面中的文字"],
-    collecting_a:["采集第一组图像","正在从三帧中选择最清晰画面"],
+    collecting_frames:["采集清晰画面","正在从两帧中选择最清晰画面"],
+    ocr_primary:["全文 OCR 处理中","正在执行一次整页文字识别，请保持纸张不动"],
+    ocr_refining:["低置信度区域复核","正在放大复核少量不清晰文字"],
+    queued:["OCR 任务排队","上一张识别结束后只处理当前最新报告单"],
+    completed:["全文识别完成","可复制或导出当前报告单文字；取走后自动隐藏"],
+    collecting_a:["采集第一组图像","正在从五帧中选择最清晰画面"],
     field_a_ready:["第一组识别完成","准备进行第二次独立识别"],
-    waiting_b:["等待第二次识别","短暂等待后重新采集三帧"],
+    waiting_b:["等待第二次识别","短暂等待后重新采集五帧"],
     retry_waiting_a:["正在重新验证","两次结果不一致，准备重试"],
-    collecting_b:["采集第二组图像","正在从三帧中选择最清晰画面"],
+    collecting_b:["采集第二组图像","正在从五帧中选择最清晰画面"],
     reposition_required:["未检测到文字","请移动纸张，使带号码区域清晰可见"],
     burst_rejected:["图像质量不足","请减少反光并保持纸张稳定"],
     ocr_error:["OCR 暂不可用","请检查本地 OCR 服务"],
@@ -460,7 +485,8 @@ function renderStatus(result){
     verification_rejected:["单号验证未通过","全文结果不受单号规则影响"]
   };
   const selected=labels[stage]||["正在检测",String(stage||"")];
-  setStatus(stage==="verified"?"ready":stage==="verification_rejected"||stage==="ocr_error"?"error":"",selected[0],selected[1]);
+  const completedKind=stage==="completed"?(result.full_text?.status==="accepted"?"ready":result.full_text?.status==="review_required"?"":"error"):"";
+  setStatus(stage==="verified"?"ready":stage==="verification_rejected"||stage==="ocr_error"?"error":completedKind,selected[0],selected[1]);
 }
 
 async function pollStatus(){
@@ -468,8 +494,13 @@ async function pollStatus(){
     const response=await fetch("/api/status?generation="+generation,{cache:"no-store"});
     const result=await response.json();
     generation=result.generation;
+    statusFailures=0;
     renderStatus(result);
-  }catch(error){setStatus("error","状态服务断开","无法读取 DocAligner 检测状态");}
+  }catch(error){
+    statusFailures+=1;
+    if(statusFailures<3)setStatus("","正在重新连接状态服务","保留最近一次 OCR 状态，页面会自动重试");
+    else setStatus("error","状态服务断开","连续多次无法读取 DocAligner 检测状态");
+  }
   window.setTimeout(pollStatus,200);
 }
 
@@ -502,7 +533,8 @@ exportPatient.addEventListener("click",()=>{
   window.setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
 window.addEventListener("beforeunload",()=>{if(reader)reader.close();});
-connectVideo();loadConfig();pollStatus();pollResult();pollPatient();
+if(textOnly)document.body.classList.add("text-only");
+connectVideo();loadConfig();pollStatus();pollResult();if(!textOnly)pollPatient();
 </script>
 </body>
 </html>""".encode("utf-8")
@@ -562,11 +594,13 @@ def normalize_trigger_status(payload: Dict[str, Any]) -> Dict[str, Any]:
         "state": str(payload.get("state") or "absent")[:48],
         "reason": str(payload.get("reason") or "")[:96],
         "stable_for": round(max(0.0, _number(payload.get("stable_for"))), 3),
-        "stable_target_seconds": round(max(0.1, _number(payload.get("stable_target_seconds"), 0.8)), 3),
+        "stable_target_seconds": round(max(0.1, _number(payload.get("stable_target_seconds"), 0.5)), 3),
+        "burst_target_frames": max(1, int(_number(payload.get("burst_target_frames"), 3))),
         "capture_stage": str(payload.get("capture_stage") or payload.get("state") or "absent")[:64],
         "ocr_available": bool(payload.get("ocr_available")),
         "text_detected": bool(payload.get("text_detected")),
         "capture_id": capture_id,
+        "text_only": bool(payload.get("text_only")),
         "full_text": {
             "available": bool(full_text.get("available")),
             "status": str(full_text.get("status") or "waiting")[:32],
@@ -639,7 +673,7 @@ def _identifier_matches_rule(identifier: str, rule: Dict[str, Any]) -> bool:
 
 
 def _full_text_document(payload: Any, expected_capture_id: str) -> Dict[str, Any]:
-    if not isinstance(payload, dict) or payload.get("status") != "accepted":
+    if not isinstance(payload, dict) or payload.get("status") not in {"accepted", "review_required"}:
         return {"available": False, "status": "invalid"}
     capture_id = payload.get("capture_id")
     if not isinstance(capture_id, str) or not capture_id or capture_id != expected_capture_id:
@@ -682,6 +716,7 @@ def _full_text_document(payload: Any, expected_capture_id: str) -> Dict[str, Any
     if image_width < 1 or image_height < 1:
         return {"available": False, "status": "invalid"}
 
+    schema_version = int(_number(document.get("schema_version"), 1))
     blocks = []
     for raw in (document.get("blocks") or [])[:2048]:
         if not isinstance(raw, dict):
@@ -696,16 +731,80 @@ def _full_text_document(payload: Any, expected_capture_id: str) -> Dict[str, Any
         if any(value < 0 or value > 1000 for value in box):
             continue
         span_id = int(_number(raw.get("id")))
+        source_index = int(_number(raw.get("source_index"), span_id - 1))
         line_id = int(_number(raw.get("line_id")))
-        if span_id < 1 or line_id < 1:
+        if span_id < 1 or source_index < 0 or line_id < 1:
             continue
+        raw_box = raw.get("box")
+        if isinstance(raw_box, list) and len(raw_box) == 4:
+            original_box = [round(_number(value), 3) for value in raw_box]
+        else:
+            original_box = [
+                round(box[0] * image_width / 1000.0, 3),
+                round(box[1] * image_height / 1000.0, 3),
+                round(box[2] * image_width / 1000.0, 3),
+                round(box[3] * image_height / 1000.0, 3),
+            ]
+        if (
+            original_box[0] < 0
+            or original_box[1] < 0
+            or original_box[2] > image_width
+            or original_box[3] > image_height
+            or original_box[0] > original_box[2]
+            or original_box[1] > original_box[3]
+        ):
+            continue
+        normalized_polygon = [
+            [int(_number(point[0])), int(_number(point[1]))]
+            for point in (raw.get("normalized_polygon") or [])[:16]
+            if isinstance(point, list)
+            and len(point) == 2
+            and 0 <= _number(point[0], -1.0) <= 1000
+            and 0 <= _number(point[1], -1.0) <= 1000
+        ]
+        if len(normalized_polygon) < 4:
+            normalized_polygon = [
+                [box[0], box[1]],
+                [box[2], box[1]],
+                [box[2], box[3]],
+                [box[0], box[3]],
+            ]
+        polygon = [
+            [round(_number(point[0]), 3), round(_number(point[1]), 3)]
+            for point in (raw.get("polygon") or [])[:16]
+            if isinstance(point, list)
+            and len(point) == 2
+            and 0 <= _number(point[0], -1.0) <= image_width
+            and 0 <= _number(point[1], -1.0) <= image_height
+        ]
+        if len(polygon) < 4:
+            polygon = [
+                [original_box[0], original_box[1]],
+                [original_box[2], original_box[1]],
+                [original_box[2], original_box[3]],
+                [original_box[0], original_box[3]],
+            ]
         blocks.append(
             {
                 "id": span_id,
+                "source_index": source_index,
                 "line_id": line_id,
                 "text": text,
+                "box": original_box,
+                "polygon": polygon,
                 "normalized_box": box,
                 "score": round(max(0.0, min(1.0, _number(raw.get("score")))), 4),
+                "normalized_polygon": normalized_polygon,
+                "recognition_source": str(raw.get("recognition_source") or "primary")[:32],
+                "alternatives": [
+                    {
+                        "text": str(item.get("text") or "")[:4096],
+                        "score": round(max(0.0, min(1.0, _number(item.get("score")))), 4),
+                        "recognition_source": str(item.get("recognition_source") or "refinement")[:32],
+                    }
+                    for item in (raw.get("alternatives") or [])[:8]
+                    if isinstance(item, dict) and str(item.get("text") or "")
+                ],
             }
         )
     blocks.sort(key=lambda item: (item["line_id"], item["normalized_box"][0], item["id"]))
@@ -724,22 +823,31 @@ def _full_text_document(payload: Any, expected_capture_id: str) -> Dict[str, Any
         for line_id, line_blocks in grouped.items()
     ]
     mean_confidence = sum(block["score"] for block in blocks) / len(blocks)
+    selected_frame_sha256 = str(source.get("selected_frame_sha256") or "")
+    if re.fullmatch(r"[0-9a-f]{64}", selected_frame_sha256) is None:
+        selected_frame_sha256 = ""
     return {
         "available": True,
-        "status": "accepted",
+        "status": str(payload.get("status")),
         "capture_id": capture_id,
         "source": {
             "frame_size": {"width": source_width, "height": source_height},
             "paper_corners": corners,
             "ocr_rotation": rotation,
+            "ocr_document_long_side": max(0, int(_number(source.get("ocr_document_long_side")))),
+            "selected_frame_sha256": selected_frame_sha256,
         },
         "image_size": {"width": image_width, "height": image_height},
+        "schema_version": schema_version,
         "full_text": "\n".join(line["text"] for line in lines),
         "lines": lines,
         "blocks": blocks,
         "line_count": len(lines),
         "item_count": len(blocks),
         "mean_confidence": round(mean_confidence, 4),
+        "quality": payload.get("quality") if isinstance(payload.get("quality"), dict) else {},
+        "timings": payload.get("timings") if isinstance(payload.get("timings"), dict) else {},
+        "reasons": [str(value)[:96] for value in (payload.get("reasons") or [])[:16]],
     }
 
 
@@ -780,7 +888,7 @@ class VerifiedResultStore:
         if not verified:
             return {
                 "available": bool(document.get("available")),
-                "status": "accepted" if document.get("available") else "waiting",
+                "status": document.get("status") if document.get("available") else "waiting",
                 "identifier_available": False,
                 "document": document,
                 "verification": {
@@ -1879,6 +1987,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--patient-query-timeout-seconds", type=float, default=12.0)
     parser.add_argument("--patient-query-retry-seconds", type=float, default=5.0)
+    parser.add_argument("--text-only", action="store_true")
     return parser.parse_args()
 
 
@@ -1911,34 +2020,38 @@ def main() -> int:
         default_ocr_rotation=0,
         restart_trigger=restart_trigger,
     )
-    patient_store = VerifiedPatientResultStore(
-        args.patient_result_file,
-        args.patient_metadata_file,
-    )
-    patient_query = VerifiedPatientQuery(
-        cache,
-        result_store,
-        config_store,
-        patient_store,
-        args.patient_query_state_file,
-        args.gateway_patient_endpoint,
-        timeout_seconds=args.patient_query_timeout_seconds,
-        retry_seconds=args.patient_query_retry_seconds,
-    )
-    forwarder = VerifiedIdentifierForwarder(
-        cache,
-        result_store,
-        config_store,
-        args.forward_state_file,
-        args.gateway_scan_endpoint,
-        timeout_seconds=args.forward_timeout_seconds,
-        retry_seconds=args.forward_retry_seconds,
-    )
+    patient_store = None
+    patient_query = None
+    forwarder = None
+    if not args.text_only:
+        patient_store = VerifiedPatientResultStore(
+            args.patient_result_file,
+            args.patient_metadata_file,
+        )
+        patient_query = VerifiedPatientQuery(
+            cache,
+            result_store,
+            config_store,
+            patient_store,
+            args.patient_query_state_file,
+            args.gateway_patient_endpoint,
+            timeout_seconds=args.patient_query_timeout_seconds,
+            retry_seconds=args.patient_query_retry_seconds,
+        )
+        forwarder = VerifiedIdentifierForwarder(
+            cache,
+            result_store,
+            config_store,
+            args.forward_state_file,
+            args.gateway_scan_endpoint,
+            timeout_seconds=args.forward_timeout_seconds,
+            retry_seconds=args.forward_retry_seconds,
+        )
     detector_probe = SystemdServiceProbe(args.trigger_service)
     page = PAGE.replace(
         b"__ROTATION_CLASS__",
         ("rotation-%d" % args.display_rotation).encode("ascii"),
-    )
+    ).replace(b"__TEXT_ONLY_JSON__", b"true" if args.text_only else b"false")
     server = Server(
         (args.host, args.port),
         cache,
@@ -1951,15 +2064,19 @@ def main() -> int:
         page=page,
     )
     print("RK3588 capture monitor listening on http://%s:%d" % (args.host, args.port), flush=True)
-    patient_query.start()
-    forwarder.start()
+    if patient_query is not None:
+        patient_query.start()
+    if forwarder is not None:
+        forwarder.start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         pass
     finally:
-        patient_query.stop()
-        forwarder.stop()
+        if patient_query is not None:
+            patient_query.stop()
+        if forwarder is not None:
+            forwarder.stop()
         server.server_close()
     return 0
 

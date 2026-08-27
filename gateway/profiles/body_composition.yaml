@@ -1,0 +1,6 @@
+id: body_composition
+device_type: "人体成分检查"
+software: "人体成分分析仪"
+flow: body_composition
+vision:
+  close_msc_popup_when_detected: true

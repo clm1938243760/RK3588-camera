@@ -1,0 +1,176 @@
+device:
+  id: "rk3588-gateway-001"
+  location: "deployment-site"
+  type: "medical-report-gateway"
+  profile_dir: "/var/lib/rk3588-gateway/device"
+
+active_profile: body_composition
+profile_files:
+  - "profiles/body_composition.yaml"
+  - "profiles/bodypass.yaml"
+  - "profiles/oct.yaml"
+  - "profiles/pelvic_floor.yaml"
+  - "profiles/esophageal_motility.yaml"
+
+scanner:
+  enabled: true
+  event_device: "/dev/input/by-id/usb-SCANNER-event-kbd"
+  terminator_keys: ["KEY_ENTER", "KEY_KPENTER"]
+  min_length: 8
+
+patient_api:
+  enabled: true
+  endpoint: "http://127.0.0.1:9061/api/client/getTJPatientInfo"
+  timeout_seconds: 10
+  user_agent: "RK3588-Gateway"
+  raw_dir: "/var/lib/rk3588-gateway/api_raw"
+
+hid_input:
+  enabled: true
+  keyboard_backend: "usb_gadget"
+  mouse_backend: "usb_gadget"
+  keyboard_device: "/dev/hidg0"
+  mouse_device: "/dev/hidg1"
+  template_path: "/opt/rk3588_gateway/MarkInfo_SearchTitle_Config_100.json"
+  screen_width: 1920
+  screen_height: 1080
+  action_delay_ms: 150
+  start_delay_ms: 150
+  force_caps_ascii: true
+  non_ascii_mode: "alt_numpad_hex"
+  powershell_wait_ms: 1800
+
+vision:
+  enabled: true
+  device: "/dev/video40"
+  capture_format: "bgr"
+  capture_width: 1920
+  capture_height: 1080
+  capture_framerate: 60
+  capture_frames: 1
+  capture_io_mode: 0
+  workdir: "/tmp/rk3588-vision-flow"
+  frame_endpoint: "http://127.0.0.1:8090/api/frame.jpg?quality=90"
+  icon_endpoint: "http://127.0.0.1:5002/icon/locate"
+  window_endpoint: "http://127.0.0.1:5002/window/detect"
+  software: "人体成分分析仪"
+  wait_after_open: 2.5
+  wait_after_action: 1.0
+  wait_after_no_detection: 5.0
+  wait_after_start: 3.0
+  analysis_wait: 1.5
+  max_runtime: 300.0
+  timeout_seconds: 15.0
+
+printer:
+  enabled: true
+  command: "lp"
+  printer_name: "HP_DeskJet_4900"
+  timeout_seconds: 60
+
+print_capture:
+  enabled: true
+  device: "/dev/g_printer0"
+  output_dir: "/var/lib/rk3588-gateway/print_jobs"
+  chunk_size: 65536
+  idle_complete_seconds: 2
+  min_job_bytes: 128
+
+report_pdf:
+  enabled: true
+  output_dir: "/var/lib/rk3588-gateway/reports_pdf"
+  keep_original: true
+
+report_upload:
+  enabled: true
+  endpoint: "http://127.0.0.1:9061/api/client/uploadOriginalReport"
+  report_info_path: "/var/lib/rk3588-gateway/device/ReportInfo.xml"
+  state_dir: "/var/lib/rk3588-gateway/report_upload_state"
+  poll_interval_seconds: 5
+  timeout_seconds: 30
+  retry_interval_seconds: 60
+  max_attempts: 3
+  init_baseline: true
+
+msc:
+  enabled: true
+  image_path: "/var/lib/rk3588-gateway/msc/ums_shared.img"
+  mount_dir: "/mnt/rk3588-gateway-msc"
+  output_dir: "/var/lib/rk3588-gateway/msc_files"
+  state_dir: "/var/lib/rk3588-gateway/msc_state"
+  gadget_dir: "/sys/kernel/config/usb_gadget/rk3588_c1_msc"
+  udc_device: "fc400000.usb"
+  poll_interval_seconds: 5
+  stable_seconds: 3
+  quiet_seconds: 2
+  init_baseline: true
+  rebuild_command: ""
+  copy_recursive: true
+  ignore_names: ["System Volume Information", "$RECYCLE.BIN"]
+
+gpio:
+  enabled: false
+  consumer: "rk3588-gateway"
+  lines: []
+
+vm_transfer:
+  enabled: false
+  method: "scp"
+  host: ""
+  user: ""
+  password: ""
+  remote_dir: "~/Documents"
+  port: 22
+  connect_timeout_seconds: 10
+  keep_local_copy: true
+
+uploader:
+  enabled: false
+  endpoint: ""
+  api_key: ""
+  timeout_seconds: 10
+  retry_interval_seconds: 5
+  max_batch_size: 20
+
+local_api:
+  enabled: true
+  host: "0.0.0.0"
+  port: 8080
+  display_state_path: "/run/rk3588-gateway/display-state.json"
+
+# The report center starts in shadow mode so it can be verified beside the
+# existing gateway without opening HID, scanner, MSC or printer devices.
+report_center:
+  enabled: true
+  shadow_mode: true
+  intake_only: true
+  data_dir: "/var/lib/rk3588-report-center"
+  database_path: "/var/lib/rk3588-report-center/db/report-center.sqlite3"
+  archive_dir: "/var/lib/rk3588-report-center/archive"
+  incoming_dir: "/var/lib/rk3588-report-center/incoming"
+  host: "0.0.0.0"
+  port: 8443
+  ssl_cert: "/var/lib/rk3588-report-center/tls/report-center.crt"
+  ssl_key: "/var/lib/rk3588-report-center/tls/report-center.key"
+  session_hours: 12
+  retention_days: 90
+  report_info_path: "/var/lib/rk3588-gateway/device/ReportInfo.xml"
+  upload_poll_seconds: 2
+  upload_retry_seconds: 60
+  upload_max_attempts: 10
+  camera_loopback_only: true
+  portal_dir: "/opt/rk3588_gateway/portal_dist"
+  camera_configuration_image_dir: "/run/rk3588-report-parser/configuration-images"
+  template_image_dir: "/var/lib/rk3588-report-center/template-images"
+  camera_template_runtime_file: "/run/rk3588-report-parser/active-camera-template.json"
+  camera_full_page_once_file: "/run/rk3588-report-parser/force-full-page-once"
+  entry_capture_dir: "/var/lib/rk3588-report-center/entry-captures"
+  hid_active_marker: "/run/rk3588-report-center/hid-active"
+  external_report_token_file: "/etc/gadget-msc-printer/report-link.token"
+  external_report_window_seconds: 7200
+
+storage:
+  sqlite_path: "/var/lib/rk3588-gateway/events.db"
+
+logging:
+  level: "INFO"

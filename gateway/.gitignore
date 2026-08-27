@@ -1,0 +1,40 @@
+# Runtime/generated data
+output/
+tmp/
+logs/
+*.log
+
+# Python local state
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.playwright-cli/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+build/
+dist/
+*.egg-info/
+
+# Board/runtime artifacts
+*.img
+*.raw
+*.bgr
+*.jpg
+*.jpeg
+!assets/
+!assets/icon_match/
+!assets/icon_match/*.jpg
+*.pdf
+*.tar
+*.tar.gz
+*.zip
+
+# Local editor/OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+node_modules/

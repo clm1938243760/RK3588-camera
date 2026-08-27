@@ -1,0 +1,9 @@
+id: bodypass
+device_type: "人体成分检查"
+software: "BodyPass"
+flow: bodypass
+vision:
+  close_msc_popup_when_detected: true
+  wait_after_open: 4.0
+  wait_after_action: 1.0
+  max_runtime: 360.0

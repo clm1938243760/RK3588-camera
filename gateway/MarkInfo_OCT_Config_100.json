@@ -1,0 +1,70 @@
+{
+  "title": "OCT",
+  "windowTitleLocation": "0, 0, 1920, 1080",
+  "eventClassList": [
+    {
+      "index": 0,
+      "clickType": 1,
+      "text": "xing",
+      "x": 590,
+      "y": 148,
+      "clickLogStr": "input surname"
+    },
+    {
+      "index": 1,
+      "clickType": 1,
+      "text": "ming",
+      "x": 590,
+      "y": 190,
+      "clickLogStr": "input given name"
+    },
+    {
+      "index": 2,
+      "clickType": 1,
+      "text": "birthday",
+      "x": 430,
+      "y": 282,
+      "clickLogStr": "input birthday"
+    },
+    {
+      "index": 3,
+      "clickType": 0,
+      "text": null,
+      "x": 596,
+      "y": 343,
+      "clickLogStr": "open sex dropdown"
+    },
+    {
+      "index": 4,
+      "clickType": 7,
+      "text": "sex:男",
+      "x": 445,
+      "y": 384,
+      "clickLogStr": "select male"
+    },
+    {
+      "index": 5,
+      "clickType": 7,
+      "text": "sex:女",
+      "x": 445,
+      "y": 403,
+      "clickLogStr": "select female"
+    },
+    {
+      "index": 6,
+      "clickType": 1,
+      "text": "patient_id",
+      "x": 490,
+      "y": 402,
+      "clickLogStr": "input patient id"
+    },
+    {
+      "index": 7,
+      "clickType": 0,
+      "text": null,
+      "x": 1224,
+      "y": 1059,
+      "clickLogStr": "click acquire"
+    }
+  ]
+}

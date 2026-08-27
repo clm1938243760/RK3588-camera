@@ -1,0 +1,22 @@
+[Unit]
+Description=RK3588 Camera Patient Intake and HID Service
+After=network-online.target gadget-mode.service
+Wants=network-online.target gadget-mode.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/rk3588_gateway
+Environment=PYTHONPATH=/opt/rk3588_gateway/src
+ExecStart=/opt/rk3588_gateway/.venv/bin/python -m rk3588_gateway.report_center_main --config /opt/rk3588_gateway/config.yaml
+Restart=always
+RestartSec=3
+User=root
+Group=root
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/rk3588-report-center /var/lib/rk3588-gateway /run
+
+[Install]
+WantedBy=multi-user.target

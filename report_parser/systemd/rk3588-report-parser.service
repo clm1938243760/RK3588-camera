@@ -1,0 +1,25 @@
+[Unit]
+Description=RK3588 OCR character-count report parser
+After=network-online.target rk3588-ppocr.service
+Wants=network-online.target rk3588-ppocr.service
+
+[Service]
+Type=simple
+User=linaro
+Group=linaro
+WorkingDirectory=/opt/rk3588_report_parser
+Environment=PYTHONPATH=/opt/rk3588_report_parser/src
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=/etc/rk3588-report-parser.env
+ExecStart=/usr/bin/python3 -m rk3588_report_parser.web_server --config /opt/rk3588_report_parser/config.rk3588.ocr_only.json --host 0.0.0.0 --port 8020 --rules-file /var/lib/rk3588-report-parser/active_identifier_rules.json --manifest /opt/rk3588_report_parser/runtime/manifest.json --allow-unverified-runtime
+Restart=on-failure
+RestartSec=2
+TimeoutStopSec=10
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/rk3588-report-parser
+
+[Install]
+WantedBy=multi-user.target

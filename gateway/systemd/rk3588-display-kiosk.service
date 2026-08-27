@@ -1,0 +1,16 @@
+[Unit]
+Description=RK3588 HDMI Status Display
+After=graphical.target rk3588-gateway.service
+Wants=rk3588-gateway.service
+
+[Service]
+Type=simple
+Environment=DISPLAY=:0
+Environment=DISPLAY_WIDTH=480
+Environment=DISPLAY_HEIGHT=320
+ExecStart=/bin/bash /opt/rk3588_gateway/scripts/start_display_kiosk.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=graphical.target

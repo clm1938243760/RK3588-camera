@@ -1,0 +1,54 @@
+{
+  "title": "盆底肌",
+  "windowTitleLocation": "0, 0, 1920, 1080",
+  "eventClassList": [
+    {
+      "index": 0,
+      "clickType": 1,
+      "text": "patient_id",
+      "x": 512,
+      "y": 145,
+      "clickLogStr": "input patient id"
+    },
+    {
+      "index": 1,
+      "clickType": 1,
+      "text": "patient_name",
+      "x": 304,
+      "y": 257,
+      "clickLogStr": "input patient name"
+    },
+    {
+      "index": 2,
+      "clickType": 1,
+      "text": "sex",
+      "x": 641,
+      "y": 257,
+      "clickLogStr": "input sex"
+    },
+    {
+      "index": 3,
+      "clickType": 1,
+      "text": "birthday",
+      "x": 641,
+      "y": 294,
+      "clickLogStr": "input birthday"
+    },
+    {
+      "index": 4,
+      "clickType": 1,
+      "text": "age",
+      "x": 976,
+      "y": 294,
+      "clickLogStr": "input age"
+    },
+    {
+      "index": 5,
+      "clickType": 0,
+      "text": null,
+      "x": 818,
+      "y": 965,
+      "clickLogStr": "click patient form save"
+    }
+  ]
+}

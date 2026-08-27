@@ -1,0 +1,23 @@
+# Isolated desktop UIE environment. Do not install into .venv-ocr.
+# setup_uie_env.ps1 installs PaddleNLP itself with --no-deps because the
+# 2.8.1 wheel declares an unavailable tool-helpers package.
+numpy>=1.24,<2
+protobuf==3.20.2
+paddlepaddle==2.6.2
+huggingface-hub>=0.19.2,<1
+safetensors
+regex
+sentencepiece
+tqdm
+colorlog
+colorama
+jieba
+aistudio-sdk==0.2.6
+jinja2
+scipy<1.14
+datasets==2.14.7
+dill==0.3.4
+multiprocess==0.70.12.2
+seqeval==1.2.2
+fastapi<0.116
+uvicorn<0.35

@@ -4,6 +4,7 @@ set -euo pipefail
 MEDIAMTX_PID_FILE="${CAMERA_MEDIAMTX_PID_FILE:-/tmp/rk3588_camera_mediamtx.pid}"
 STREAM_PID_FILE="${CAMERA_STREAM_PID_FILE:-/tmp/rk3588_camera_stream.pid}"
 WORKER_PID_FILE="${CAMERA_WORKER_PID_FILE:-/tmp/rk3588_camera_stream_worker.pid}"
+OCR_PID_FILE="${CAMERA_OCR_PID_FILE:-/tmp/rk3588_camera_ocr_snapshots.pid}"
 
 stop_pid_file() {
   local pid_path="$1"
@@ -22,5 +23,6 @@ stop_pid_file() {
 
 stop_pid_file "$STREAM_PID_FILE"
 stop_pid_file "$WORKER_PID_FILE"
+stop_pid_file "$OCR_PID_FILE"
 stop_pid_file "$MEDIAMTX_PID_FILE"
 echo "CSI camera preview stopped."

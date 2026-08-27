@@ -1,0 +1,47 @@
+{
+  "coordinate_mode": "fixed_absolute",
+  "coordinate_basis": {
+    "width": 1920,
+    "height": 1080
+  },
+  "actions": [
+    {
+      "type": "click",
+      "x": 635,
+      "y": 570,
+      "delay_after_ms": 300
+    },
+    {
+      "type": "input_field",
+      "field": "patient_id",
+      "x": 682,
+      "y": 362
+    },
+    {
+      "type": "input_field",
+      "field": "patient_name",
+      "x": 682,
+      "y": 391
+    },
+    {
+      "type": "condition",
+      "field": "sex",
+      "equals": "男",
+      "x": 875,
+      "y": 359
+    },
+    {
+      "type": "condition",
+      "field": "sex",
+      "equals": "女",
+      "x": 949,
+      "y": 359
+    },
+    {
+      "type": "input_field",
+      "field": "birthday",
+      "x": 946,
+      "y": 391
+    }
+  ]
+}

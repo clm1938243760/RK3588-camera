@@ -1,0 +1,12 @@
+# Use this only in a separate CPython 3.10 virtual environment on Windows.
+# It is intentionally isolated from .venv-pc, which hosts the desktop Qwen
+# model and currently uses a newer Python runtime.
+# PaddleOCR 2.7's bundled OpenCV wheels target the NumPy 1.x ABI on Windows.
+numpy==1.26.4
+opencv-python==4.6.0.66
+opencv-contrib-python==4.6.0.66
+# pdf2docx pulls this package transitively; keep it on the same ABI generation.
+opencv-python-headless==4.6.0.66
+Pillow>=9,<13
+paddlepaddle==2.6.2
+paddleocr==2.7.3

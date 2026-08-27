@@ -1,0 +1,45 @@
+{
+  "ocr": {
+    "endpoint": "http://127.0.0.1:5002/ocr",
+    "timeout_seconds": 30.0
+  },
+  "llm": {
+    "endpoint": "http://127.0.0.1:8010/v1/chat/completions",
+    "model": "Qwen2.5-7B-Instruct-4bit",
+    "timeout_seconds": 60.0,
+    "max_tokens": 256
+  },
+  "quality": {
+    "min_longest_side": 1600,
+    "min_contrast": 6.0,
+    "min_laplacian_energy": 25.0,
+    "min_ocr_items": 3,
+    "min_ocr_score": 0.65
+  },
+  "preprocessing": {
+    "perspective_correction": true,
+    "min_document_area_ratio": 0.25,
+    "min_confidence": 0.82,
+    "min_output_side": 320
+  },
+  "validation": {
+    "max_age_delta_years": 2,
+    "require_patient_name": false,
+    "require_identifier": true
+  },
+  "identifiers": {
+    "profile": "pc-12g",
+    "max_candidates": 96,
+    "minimum_ocr_score": 0.65,
+    "same_line_gap": 220.0,
+    "next_line_gap": 120.0,
+    "nearby_distance": 220.0,
+    "tie_confidence_delta": 0.03,
+    "tie_distance_delta": 0.02
+  },
+  "identifier_rules": {
+    "enabled": false,
+    "profile": "unconfigured",
+    "fields": []
+  }
+}

@@ -1,0 +1,12 @@
+[Unit]
+Description=RK3588 USB HID Gadget
+Before=rk3588-gateway.service
+After=systemd-modules-load.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /opt/rk3588_gateway/scripts/setup_usb_hid_gadget.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

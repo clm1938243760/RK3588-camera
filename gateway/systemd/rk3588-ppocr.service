@@ -1,0 +1,18 @@
+[Unit]
+Description=RK3588 local RKNN vision API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/rk3588_gateway
+Environment=PYTHONUNBUFFERED=1
+Environment=LD_LIBRARY_PATH=/userdata/aidemo/rknn_PPOCR-System_demo_native/lib:/usr/lib:/usr/lib/aarch64-linux-gnu
+ExecStart=/opt/rk3588_gateway/.venv/bin/python /opt/rk3588_gateway/scripts/ppocr_rknn_server.py --host 0.0.0.0 --port 5002
+Restart=always
+RestartSec=3
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

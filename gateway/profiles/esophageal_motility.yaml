@@ -1,0 +1,12 @@
+id: esophageal_motility
+device_type: "\u98df\u9053\u52a8\u529b"
+software: "esophageal_motility"
+flow: esophageal_motility
+hid_input:
+  template_path: "/opt/rk3588_gateway/MarkInfo_EsophagealMotility_Config_100.json"
+vision:
+  enabled: true
+  close_msc_popup_when_detected: false
+  wait_after_open: 3.0
+  wait_after_action: 0.5
+  max_runtime: 180.0

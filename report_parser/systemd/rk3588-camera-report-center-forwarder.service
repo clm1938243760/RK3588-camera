@@ -1,0 +1,26 @@
+[Unit]
+Description=RK3588 camera OCR to report center forwarder
+After=network-online.target rk3588-report-center.service rk3588-report-camera-trigger.service
+Wants=network-online.target rk3588-report-center.service rk3588-report-camera-trigger.service
+
+[Service]
+Type=simple
+User=linaro
+Group=linaro
+WorkingDirectory=/opt/rk3588_report_parser
+Environment=PYTHONPATH=/opt/rk3588_report_parser/src
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/rk3588_report_parser/.venv-camera/bin/python -m rk3588_report_parser.report_center_forwarder --source-file /run/rk3588-report-parser/verified-full-text.json --state-file /run/rk3588-report-parser/report-center-forwarder.json --endpoint https://127.0.0.1:8443/internal/v1/camera-captures --allow-insecure-loopback-tls
+Restart=always
+RestartSec=2
+RuntimeDirectory=rk3588-report-parser
+RuntimeDirectoryMode=0700
+RuntimeDirectoryPreserve=yes
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/run/rk3588-report-parser
+
+[Install]
+WantedBy=multi-user.target

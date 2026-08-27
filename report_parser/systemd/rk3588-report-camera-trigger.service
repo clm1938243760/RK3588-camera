@@ -1,0 +1,30 @@
+[Unit]
+Description=RK3588 report paper detection and full-text OCR capture
+After=network-online.target rk3588-ppocr.service rk3588-camera-ocr-snapshots.service
+Wants=network-online.target rk3588-ppocr.service rk3588-camera-ocr-snapshots.service
+
+[Service]
+Type=simple
+User=linaro
+Group=linaro
+WorkingDirectory=/opt/rk3588_report_parser
+Environment=PYTHONPATH=/opt/rk3588_report_parser/src
+Environment=PYTHONUNBUFFERED=1
+Environment=OCR_ROTATION=90
+Environment=OCR_REGION_TOP=0.13
+Environment=OCR_REGION_BOTTOM=0.60
+EnvironmentFile=-/var/lib/rk3588-report-parser/camera-capture.env
+ExecStart=/opt/rk3588_report_parser/.venv-camera/bin/python /opt/rk3588_report_parser/scripts/camera_paper_trigger.py --text-only --frame-glob /tmp/rk3588_camera_ocr_*.jpg --paper-model /opt/rk3588_report_parser/runtime/docaligner/lcnet050_p_multi_decoder_l3_d64_256_fp32.onnx --detector-backend onnxruntime --ocr-endpoint http://127.0.0.1:5002/ocr --ocr-rotation ${OCR_ROTATION} --ocr-document-long-side 3200 --ocr-tile-max-aspect 0 --ocr-tile-overlap-ratio 0.15 --ocr-tile-max-count 4 --ocr-refinement-max-regions 0 --ocr-region-crop-top ${OCR_REGION_TOP} --ocr-region-crop-bottom ${OCR_REGION_BOTTOM} --ocr-region-accept-top ${OCR_REGION_TOP} --ocr-region-accept-bottom ${OCR_REGION_BOTTOM} --burst-frames 2 --ocr-total-budget 10 --stable-seconds 0.5 --config /opt/rk3588_report_parser/config.rk3588.ocr_only.json --rules-file /var/lib/rk3588-report-parser/active_identifier_rules.json --status-file /run/rk3588-report-parser/camera-trigger.json --result-file /run/rk3588-report-parser/verified-identifier.json --full-text-result-file /run/rk3588-report-parser/verified-full-text.json --configuration-image-dir /run/rk3588-report-parser/configuration-images
+Restart=on-failure
+RestartSec=2
+TimeoutStopSec=10
+RuntimeDirectory=rk3588-report-parser
+RuntimeDirectoryMode=0700
+NoNewPrivileges=true
+PrivateTmp=false
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/run/rk3588-report-parser
+
+[Install]
+WantedBy=multi-user.target

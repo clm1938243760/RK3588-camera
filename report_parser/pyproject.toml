@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rk3588-report-parser"
+version = "0.5.0"
+description = "Offline, template-free medical application identifier parser"
+requires-python = ">=3.9"
+dependencies = [
+  "Pillow>=9,<13",
+]
+
+[project.scripts]
+rk3588-report-parse = "rk3588_report_parser.cli:main"
+rk3588-report-evaluate = "rk3588_report_parser.evaluation:main"
+rk3588-report-evaluate-identifiers = "rk3588_report_parser.identifier_evaluation:main"
+rk3588-report-pc-model-server = "rk3588_report_parser.desktop_server:main"
+rk3588-report-pc-ocr-server = "rk3588_report_parser.desktop_ppocr_server:main"
+rk3588-report-web = "rk3588_report_parser.web_server:main"
+rk3588-report-center-forwarder = "rk3588_report_parser.report_center_forwarder:main"
+rk3588-report-uie = "rk3588_report_parser.uie_cli:main"
+rk3588-report-uie-evaluate = "rk3588_report_parser.uie_evaluation:main"
+rk3588-report-uie-x = "rk3588_report_parser.uie_x_cli:main"
+rk3588-report-uie-web = "rk3588_report_parser.uie_web_server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"rk3588_report_parser.web" = ["*.html", "*.css", "*.js"]
+"rk3588_report_parser.uie_web" = ["*.html", "*.css", "*.js"]

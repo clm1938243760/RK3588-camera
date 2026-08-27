@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>申请单号码提取</title>
+  <link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>申请单号码提取</h1>
+      <p id="runtimeText">本地服务连接中</p>
+    </div>
+    <span id="serviceState" class="service-state">检查中</span>
+  </header>
+
+  <main>
+    <section class="toolbar" aria-label="识别工具栏">
+      <label class="file-button" for="fileInput">选择图片</label>
+      <input id="fileInput" type="file" accept="image/jpeg,image/png">
+      <span id="fileName" class="file-name">未选择文件</span>
+      <input id="tokenInput" class="token-input" type="password" autocomplete="off" placeholder="访问令牌">
+      <button id="ruleButton" class="secondary" type="button">规则配置</button>
+      <button id="parseButton" type="button" disabled>开始识别</button>
+      <button id="exportButton" class="secondary" type="button" disabled>导出 JSON</button>
+    </section>
+
+    <section class="workspace">
+      <div class="document-pane">
+        <div id="imageStage" class="image-stage empty">
+          <span id="emptyText">等待申请单图片</span>
+          <div id="imageWrap" class="image-wrap" hidden>
+            <img id="previewImage" alt="申请单预览">
+            <svg id="overlay" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </div>
+        </div>
+      </div>
+
+      <aside class="result-pane" aria-live="polite">
+        <div class="result-header">
+          <div>
+            <span class="label">识别状态</span>
+            <strong id="resultStatus">等待识别</strong>
+          </div>
+          <span id="durationText">--</span>
+        </div>
+
+        <section class="primary-band">
+            <span class="label">提取结果</span>
+          <strong id="primaryValue">--</strong>
+          <span id="primaryType">--</span>
+        </section>
+
+        <section class="result-section">
+          <h2>匹配结果</h2>
+          <div id="identifierList" class="identifier-list"><p class="muted">暂无结果</p></div>
+        </section>
+
+        <section class="result-section">
+          <h2>重复候选</h2>
+          <div id="alternativeList" class="identifier-list"><p class="muted">暂无项目</p></div>
+        </section>
+
+        <section class="result-section compact">
+          <h2>质量与运行</h2>
+          <dl id="metricsList" class="metrics"></dl>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <dialog id="ruleDialog" class="rule-dialog">
+    <div class="rule-dialog-body">
+      <header class="rule-header">
+        <h2>目标号码配置</h2>
+        <button id="closeRuleButton" class="icon-button" type="button" title="关闭" aria-label="关闭">×</button>
+      </header>
+      <div class="rule-meta">
+        <label><span>配置名称</span><input id="ruleProfile" maxlength="80"></label>
+        <label class="switch-label"><input id="rulesEnabled" type="checkbox"><span>启用规则</span></label>
+      </div>
+      <div class="single-rule">
+        <label for="targetLength">目标字符数</label>
+        <input id="targetLength" type="number" min="4" max="64" step="1" inputmode="numeric">
+      </div>
+      <div class="rule-actions">
+        <span id="ruleSaveState" class="rule-save-state"></span>
+        <button id="cancelRuleButton" class="secondary" type="button">取消</button>
+        <button id="saveRuleButton" type="button">保存配置</button>
+      </div>
+    </div>
+  </dialog>
+  <script src="/assets/app.js"></script>
+</body>
+</html>

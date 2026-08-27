@@ -1,0 +1,18 @@
+[Unit]
+Description=RK3588 IMX415 4K OCR JPEG snapshots
+After=rk3588-camera-stream.service
+Wants=rk3588-camera-stream.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/rk3588_kvm
+ExecStartPre=/usr/bin/test -e /dev/video22
+ExecStart=/opt/rk3588_kvm/camera_ocr_snapshots.sh
+Restart=always
+RestartSec=1
+TimeoutStopSec=8
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

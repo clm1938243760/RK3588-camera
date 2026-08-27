@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "profile": "single-length-example",
+  "fields": [
+    {
+      "type": "selected_identifier",
+      "lengths": [8],
+      "charset": "alphanumeric",
+      "prefixes": [],
+      "allow_unlabeled": true,
+      "priority": 1000,
+      "enabled": true
+    }
+  ]
+}

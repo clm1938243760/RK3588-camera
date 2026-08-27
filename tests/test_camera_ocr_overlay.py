@@ -146,15 +146,21 @@ class VerifiedResultStoreTests(unittest.TestCase):
                         "frame_size": {"width": 1920, "height": 1080},
                         "paper_corners": [[200, 100], [1700, 120], [1680, 980], [220, 960]],
                         "ocr_rotation": 180,
+                        "ocr_document_long_side": 3200,
+                        "selected_frame_sha256": "a" * 64,
                     },
                     "document": {
+                        "schema_version": 2,
                         "image_size": [1000, 700],
                         "full_text": "untrusted duplicate",
                         "blocks": [
                             {
                                 "id": 2,
+                                "source_index": 1,
                                 "line_id": 1,
                                 "text": "张三",
+                                "box": [200, 70, 300, 112],
+                                "polygon": [[200, 70], [300, 70], [300, 112], [200, 112]],
                                 "normalized_box": [200, 100, 300, 160],
                                 "score": 0.96,
                             },
@@ -290,6 +296,49 @@ class VerifiedResultStoreTests(unittest.TestCase):
             self.assertTrue(response["document"]["available"])
             self.assertIn("检查项目", response["document"]["full_text"])
 
+    def test_returns_schema_v2_review_polygons_and_alternatives(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            rules = root / "rules.json"
+            result = root / "result.json"
+            full_text = root / "full-text.json"
+            self._write_rules(rules)
+            self._write_full_text(full_text, "capture-a")
+            payload = json.loads(full_text.read_text(encoding="utf-8"))
+            payload["status"] = "review_required"
+            payload["quality"] = {"selected_frame": {"sharpness": 123.0}}
+            payload["timings"] = {"total_ms": 4200.0}
+            payload["reasons"] = ["ocr_conflict"]
+            payload["document"]["schema_version"] = 2
+            payload["document"]["blocks"][0].update(
+                {
+                    "normalized_polygon": [[200, 100], [300, 100], [300, 160], [200, 160]],
+                    "recognition_source": "primary",
+                    "alternatives": [
+                        {"text": "张召", "score": 0.95, "recognition_source": "refinement"}
+                    ],
+                }
+            )
+            full_text.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+            store = MODULE.VerifiedResultStore(result, rules, full_text)
+
+            response = store.snapshot(
+                {"active": True, "capture_stage": "completed", "capture_id": "capture-a"}
+            )
+
+            self.assertEqual(response["status"], "review_required")
+            document = response["document"]
+            self.assertEqual(document["status"], "review_required")
+            self.assertEqual(document["schema_version"], 2)
+            reviewed = next(block for block in document["blocks"] if block["text"] == "张三")
+            self.assertEqual(reviewed["source_index"], 1)
+            self.assertEqual(reviewed["box"], [200.0, 70.0, 300.0, 112.0])
+            self.assertEqual(reviewed["polygon"][0], [200.0, 70.0])
+            self.assertEqual(reviewed["normalized_polygon"][0], [200, 100])
+            self.assertEqual(reviewed["alternatives"][0]["text"], "张召")
+            self.assertEqual(document["timings"]["total_ms"], 4200.0)
+            self.assertEqual(document["source"]["selected_frame_sha256"], "a" * 64)
+
     def test_page_contains_full_text_panel_and_camera_box_mapping(self):
         page = MODULE.PAGE.decode("utf-8")
         self.assertIn('id="ocrText"', page)
@@ -298,6 +347,34 @@ class VerifiedResultStoreTests(unittest.TestCase):
         self.assertIn('id="patientQueryEnabled"', page)
         self.assertIn('id="autoEntryEnabled"', page)
         self.assertIn('id="exportPatient"', page)
+        self.assertIn("正在从五帧中选择最清晰画面", page)
+        self.assertIn("正在从两帧中选择最清晰画面", page)
+        self.assertIn("const textOnly=__TEXT_ONLY_JSON__", page)
+        self.assertIn("statusFailures<3", page)
+
+
+class CameraRuntimeConfigurationTests(unittest.TestCase):
+    def test_preview_stream_uses_full_sensor_crop_before_capture(self):
+        root = MODULE_PATH.parent
+        script = (root / "camera_stream_mpp.sh").read_text(encoding="utf-8")
+
+        self.assertIn("--set-fmt-video=", script)
+        self.assertIn("--set-selection=", script)
+        self.assertIn("width=$SENSOR_WIDTH,height=$SENSOR_HEIGHT", script)
+        self.assertIn("--stream-mmap=3 --stream-to=-", script)
+        self.assertIn("rawvideoparse format=nv12", script)
+        self.assertIn("if (( STOP_REQUESTED )); then", script)
+        self.assertNotIn('\n  v4l2src "device=$VIDEO_DEVICE"', script)
+
+    def test_monitor_survives_camera_stream_restart(self):
+        root = MODULE_PATH.parent
+        unit = (root / "systemd" / "rk3588-camera-ocr-overlay.service").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("Wants=network-online.target rk3588-camera-stream.service", unit)
+        self.assertNotIn("Requires=rk3588-camera-stream.service", unit)
+        self.assertIn("--text-only", unit)
 
 
 class VerifiedPatientResultStoreTests(unittest.TestCase):
@@ -1062,6 +1139,29 @@ class SystemdServiceProbeTests(unittest.TestCase):
         self.assertEqual(first["state"], "active")
         self.assertEqual(second["state"], "active")
         self.assertEqual(calls, [True])
+
+
+class UnifiedStackInstallerTests(unittest.TestCase):
+    def test_installer_preserves_state_and_never_manages_usb_gadget(self):
+        script = (MODULE_PATH.parent / "install_stack.sh").read_text(encoding="utf-8")
+
+        self.assertIn("/opt/rk3588_kvm", script)
+        self.assertIn("/opt/rk3588_report_parser", script)
+        self.assertIn("/opt/rk3588_gateway", script)
+        self.assertIn("--exclude=config.yaml", script)
+        self.assertIn("USB gadget state was not modified", script)
+        self.assertNotIn("rk3588-usb-hid-gadget.service", script)
+        self.assertNotIn("rk3588-usb-printer-gadget.service", script)
+        self.assertNotIn("setup_usb_composite_gadget", script)
+
+    def test_installer_uses_the_active_integrated_service_set(self):
+        script = (MODULE_PATH.parent / "install_stack.sh").read_text(encoding="utf-8")
+
+        self.assertIn("rk3588-camera-ocr-snapshots.service", script)
+        self.assertIn("rk3588-report-camera-trigger.service", script)
+        self.assertIn("rk3588-camera-report-center-forwarder.service", script)
+        self.assertIn("rk3588-report-center.service", script)
+        self.assertIn("rk3588-fb-status.service", script)
 
 
 if __name__ == "__main__":

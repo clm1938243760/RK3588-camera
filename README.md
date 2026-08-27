@@ -1,81 +1,101 @@
-# RK3588 Camera Capture
+# RK3588 Camera OCR Gateway
 
-RK3588 CSI camera capture and report monitoring module for the ATK-DLRK3588
-board. This repository contains the camera preview, paper-capture monitor,
-OCR result display, and the patient-query integration used by the current
-board deployment.
+Complete ATK-DLRK3588 edge stack for camera capture, paper detection, medical
+form OCR, structured patient intake, USB HID entry, report collection/upload,
+the 480x320 SPI status display, and the browser administration portal.
 
-## v0.1
-
-The v0.1 pipeline is:
+## End-to-End Flow
 
 ```text
-IMX415 CSI camera
-  -> /dev/video23 1920x1080 NV12
-  -> MPP H.264 30 FPS
-  -> MediaMTX WebRTC preview :8891
-  -> latest-only JPEG snapshots at 5 FPS
-  -> DocAligner paper trigger and local PP-OCR
-  -> 8893 monitor page
+IMX415 camera
+  -> 1080p30 MPP H.264 -> MediaMTX WebRTC :8891
+  -> 4K JPEG snapshots -> DocAligner paper detection
+  -> stable 0.5 s -> two-frame quality selection
+  -> RKNN PP-OCR -> schema-v2 text and configured patient fields
+  -> report center -> HID entry, entry history and capture image
+  -> printer/MSC report collection -> PDF archive -> upload queue
+
+Browser monitor :8893       Administration portal :8443
+SPI ILI9488 /dev/spidev3.0  Workflow state and board IP
 ```
 
-After two identical identifier captures, the monitor can independently:
+The repository keeps the three runtime components together while preserving
+their established board paths:
 
-```text
-patient query -> POST 127.0.0.1:8080/patient/query -> patient JSON
-auto entry    -> POST 127.0.0.1:8080/scan          -> existing HID workflow
-```
+| Repository path | Board path | Responsibility |
+| --- | --- | --- |
+| repository root | `/opt/rk3588_kvm` | CSI capture, WebRTC and the 8893 OCR monitor |
+| `report_parser/` | `/opt/rk3588_report_parser` | DocAligner, frame selection, OCR orchestration and forwarding |
+| `gateway/` | `/opt/rk3588_gateway` | report center, HID workflow, SPI display, report archive and upload |
 
-The two actions have separate switches. Patient lookup does not create a scan
-event and does not operate HID. The current release keeps patient JSON lookup
-enabled by default and automatic HID entry disabled by default.
+See [stack architecture](docs/STACK_ARCHITECTURE.md) for service ownership and
+runtime contracts.
 
-## Repository Contents
+## Deploy
 
-- `camera_stream_mpp.sh`: camera capture, WebRTC encoder, and OCR snapshot branch.
-- `camera_stream_watchdog.sh`: restarts a stalled camera encoder only.
-- `camera_mediamtx.yml`: separate WebRTC/RTSP configuration for the CSI camera.
-- `camera_ocr_overlay.py`: 8893 monitor, OCR display, patient JSON state, and settings.
-- `start_camera_preview.sh` / `stop_camera_preview.sh`: manual preview controls.
-- `systemd/`: boot services for MediaMTX, the stream, and the monitor.
-- `docs/CAMERA_PREVIEW.md`: board-side data path and operation guide.
-- `tests/`: configuration, API, result isolation, and action-state tests.
-
-The camera trigger process and RKNN PP-OCR service remain maintained in the
-`rk3588_report_parser` and `rk3588_gateway_rk3588` repositories respectively.
-
-## Board Install
-
-The current board deployment path is `/opt/rk3588_kvm`:
+Copy the repository to the board and run:
 
 ```bash
-sudo systemctl enable --now rk3588-camera-mediamtx.service
-sudo systemctl enable --now rk3588-camera-stream.service
-sudo systemctl enable --now rk3588-camera-ocr-overlay.service
+sudo bash install_stack.sh
 ```
 
-Open:
+This updates source files and systemd units while preserving existing virtual
+environments, `config.yaml`, TLS material, databases, captures and archives.
+It enables the active stack for the next boot but does not restart services or
+touch USB configfs gadget state.
+
+After reviewing `/opt/rk3588_gateway/config.yaml`, apply the update:
+
+```bash
+sudo bash install_stack.sh --restart
+```
+
+On a new board, add `--bootstrap-python` to create missing parser and gateway
+virtual environments. MediaMTX, the vendor RKNN runtime and board device-tree
+support remain board prerequisites. Full commands and rollback guidance are in
+[deployment](docs/DEPLOYMENT.md).
+
+## Active Services
+
+- `rk3588-camera-mediamtx.service`
+- `rk3588-camera-stream.service`
+- `rk3588-camera-ocr-snapshots.service`
+- `rk3588-ppocr.service`
+- `rk3588-report-camera-trigger.service`
+- `rk3588-report-center.service`
+- `rk3588-camera-report-center-forwarder.service`
+- `rk3588-camera-ocr-overlay.service`
+- `rk3588-fb-status.service`
+
+The unified installer deliberately does not install, enable, disable or restart
+USB gadget units. The deployed C0 gadget remains owned by the board's current
+gadget-mode service, with function order keyboard, mouse, printer.
+
+## Interfaces
 
 ```text
-http://<board-ip>:8891/camera   # camera preview
-http://<board-ip>:8893/          # report monitor
-http://<board-ip>:8893/api/patient
+http://BOARD_IP:8891/camera   WebRTC camera preview
+http://BOARD_IP:8893/          paper/OCR monitor and capture settings
+https://BOARD_IP:8443/         patient intake, profiles, entry logs and reports
+http://127.0.0.1:5002/ocr      loopback RKNN OCR API
 ```
 
-The patient result file is:
+Sensitive runtime files are intentionally excluded from Git. Configure
+`gateway/config.yaml` and install a real
+`/var/lib/rk3588-gateway/device/ReportInfo.xml` on the board. The checked-in
+`gateway/ReportInfo.example.xml` is schema documentation only.
 
-```text
-/run/rk3588-report-parser/verified-patient.json
-```
-
-The JSON keeps the upstream envelope and record field names:
-`code`, `data`, `msg`, `success`, with all returned records preserved.
-
-## Local Verification
+## Verification
 
 ```powershell
 python -m py_compile camera_ocr_overlay.py tests/test_camera_ocr_overlay.py
 python -m unittest discover -s tests -v
+
+$env:PYTHONPATH = "report_parser/src"
+python -m unittest discover -s report_parser/tests -v
+
+$env:PYTHONPATH = "gateway/src"
+python -m pytest gateway/tests -q
 ```
 
-Release tag: `v0.1`.
+Repository release: `0.2.0`.

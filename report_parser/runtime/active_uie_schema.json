@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "fields": [
+    {
+      "field_key": "patient_name",
+      "prompt": "姓名",
+      "prompt_aliases": [
+        "患者姓名"
+      ],
+      "required": false,
+      "minimum_probability": 0.5
+    },
+    {
+      "field_key": "patient_id",
+      "prompt": "卡号",
+      "prompt_aliases": [
+        "患者ID",
+        "ID号"
+      ],
+      "required": false,
+      "minimum_probability": 0.5
+    },
+    {
+      "field_key": "his_exam_no",
+      "prompt": "申请号",
+      "prompt_aliases": [
+        "申请单号",
+        "处方/申请号",
+        "检查申请号"
+      ],
+      "required": false,
+      "minimum_probability": 0.5
+    },
+    {
+      "field_key": "report_no",
+      "prompt": "报告号",
+      "prompt_aliases": [
+        "报告单号"
+      ],
+      "required": false,
+      "minimum_probability": 0.5
+    },
+    {
+      "field_key": "exam_item",
+      "prompt": "检查项目",
+      "prompt_aliases": [
+        "项目名称"
+      ],
+      "required": false,
+      "minimum_probability": 0.5
+    },
+    {
+      "field_key": "sex",
+      "prompt": "性别",
+      "prompt_aliases": [
+        "患者性别"
+      ],
+      "required": false,
+      "minimum_probability": 0.4
+    },
+    {
+      "field_key": "age",
+      "prompt": "年龄",
+      "prompt_aliases": [
+        "患者年龄"
+      ],
+      "required": false,
+      "minimum_probability": 0.5
+    },
+    {
+      "field_key": "birthday",
+      "prompt": "出生日期",
+      "prompt_aliases": [],
+      "required": false,
+      "minimum_probability": 0.5
+    },
+    {
+      "field_key": "name_phonetic",
+      "prompt": "患者姓名拼音",
+      "prompt_aliases": [],
+      "required": false,
+      "minimum_probability": 0.5
+    }
+  ]
+}

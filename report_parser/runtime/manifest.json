@@ -1,0 +1,205 @@
+{
+  "schema_version": 1,
+  "status": "unverified",
+  "platform": "rk3588",
+  "active_mode": "camera_text_only_v2",
+  "deployment": {
+    "status": "board_verified",
+    "verified_at": "2026-08-27",
+    "burst_frames": 2,
+    "ocr_total_budget_seconds": 10,
+    "ocr_rotation": 90,
+    "ocr_document_long_side": 3200,
+    "ocr_tiling": {
+      "enabled": false,
+      "max_aspect": 0.0,
+      "overlap_ratio": 0.15,
+      "max_tiles": 4,
+      "padding": "white_square",
+      "merge": "core_ownership"
+    },
+    "ocr_document_region": {
+      "enabled": true,
+      "coordinate_space": "rectified_document_normalized",
+      "crop_normalized": [0, 130, 1000, 600],
+      "accept_normalized": [0, 130, 1000, 600],
+      "evidence_filter": "block_center",
+      "board_acceptance": {
+        "status": "board_verified",
+        "date": "2026-08-24",
+        "repeats": 5,
+        "primary_tile_counts": [1, 1, 1, 1, 1],
+        "ocr_call_counts": [1, 1, 1, 1, 1],
+        "refinement_ocr_call_counts": [0, 0, 0, 0, 0],
+        "secondary_full_ocr_call_counts": [0, 0, 0, 0, 0],
+        "primary_ocr_ms": [619.78, 590.4, 618.39, 612.19, 588.3],
+        "ocr_total_ms": [728.14, 666.01, 712.19, 702.94, 706.93],
+        "median_primary_ocr_ms": 612.19,
+        "median_ocr_total_ms": 706.93,
+        "maximum_ocr_total_ms": 728.14,
+        "line_counts": [19, 18, 18, 18, 17],
+        "block_counts": [26, 24, 25, 24, 25],
+        "latest_minimum_block_center_y": 153.5,
+        "latest_maximum_block_center_y": 578.0,
+        "required_section_matches": {
+          "patient_identifier": 5,
+          "request_identifier": 5,
+          "exam_code": 5,
+          "exam_item": 5
+        },
+        "review_reasons": ["low_confidence_blocks"],
+        "text_stability": "frame_dependent"
+      }
+    },
+    "ocr_refinement": {
+      "max_regions": 0,
+      "empty_primary_second_frame_retry": true
+    },
+    "qwen_enabled": false,
+    "patient_query_enabled": false,
+    "hid_auto_entry_enabled": false
+  },
+  "parser": {
+    "version": "0.5.0",
+    "schema": "medical_application_identifiers_v1",
+    "linker": "ocr_rule_v1"
+  },
+  "rkllm": {
+    "enabled": false,
+    "sdk_version": "UNSET",
+    "runtime_path": "UNSET",
+    "sha256": "UNSET"
+  },
+  "model": {
+    "enabled": false,
+    "name": "Qwen2.5-1.5B-Instruct",
+    "target_platform": "rk3588",
+    "path": "UNSET",
+    "sha256": "UNSET"
+  },
+  "ppocr": {
+    "endpoint": "http://127.0.0.1:5002/ocr",
+    "service_version": "ppocrv4-rknn-parallel3-20260824",
+    "server_path": "/opt/rk3588_gateway/scripts/ppocr_rknn_server.py",
+    "server_sha256": "f57a091e852edc17a670ad6142a84b2caa51b31bc764141fa2cdaf028392489e",
+    "worker_path": "/userdata/aidemo/rknn_PPOCR-System_demo_native/rknn_ppocr_system_worker",
+    "worker_sha256": "b2a1ff37fbd2d16e03f96714593963fa7b23f5ce8eae1892f4616c12cb8b14fa",
+    "recognition_execution": {
+      "model_batch_size": 1,
+      "parallel_contexts": 3,
+      "context_api": "rknn_dup_context",
+      "core_masks": [
+        "RKNN_NPU_CORE_0",
+        "RKNN_NPU_CORE_1",
+        "RKNN_NPU_CORE_2"
+      ],
+      "scheduling": "three_text_lines_per_round",
+      "evidence_compatibility": "exact_text_box_score_match_against_serial_worker",
+      "batch4_candidate": {
+        "status": "rejected",
+        "reason": "missing_text_blocks_and_recognition_mismatch"
+      },
+      "benchmark": {
+        "date": "2026-08-24",
+        "iterations": 9,
+        "tile_block_counts": [16, 17, 11],
+        "serial_median_ms": [767, 812, 588],
+        "parallel3_median_ms": [393, 449, 336],
+        "speedup": [1.95, 1.81, 1.75],
+        "full_pipeline_blocks": 39,
+        "full_pipeline_primary_ocr_before_ms": 2335,
+        "full_pipeline_primary_ocr_after_ms": 1340,
+        "full_pipeline_ocr_total_before_ms": 4229,
+        "full_pipeline_ocr_total_after_ms": 2688,
+        "camera_e2e_repeats": {
+          "iterations": 3,
+          "primary_ocr_ms": [1389.93, 1266.84, 1206.91],
+          "refinement_ocr_ms": [962.92, 1064.14, 908.94],
+          "ocr_total_ms": [2842.13, 2839.06, 2563.14],
+          "line_counts": [26, 25, 26],
+          "block_counts": [38, 39, 37],
+          "status": "review_required",
+          "reasons": ["ocr_conflict", "low_confidence_blocks"],
+          "text_stability": "frame_dependent"
+        }
+      }
+    },
+    "det_model_path": "/userdata/aidemo/rknn_PPOCR-System_demo_native/model/ppocrv4_det.rknn",
+    "det_model_sha256": "3bef5e38b5126c45a16b765bd4500edf166ed5656a25d524e9b3d7254e043699",
+    "rec_model_path": "/userdata/aidemo/rknn_PPOCR-System_demo_native/model/ppocrv4_rec.rknn",
+    "rec_model_sha256": "c91f4674c4e66dafa2ffeb94261972694eae2060ce9b736e4bdfd1785eb6a15c",
+    "dictionary": {
+      "format": "compiled_cpp_array_6625",
+      "path": "/userdata/aidemo/rknn_model_zoo_ppocr_min/examples/PPOCR/PPOCR-System/cpp/dict.h",
+      "sha256": "4bb05fd71957e2ea1652d6f034ce1b3ee683406bfd67d97f7dfec0ccd73fbeec"
+    },
+    "runtime": {
+      "version": "2.0.0b0 (35a6907d79@2024-03-24T10:31:14)",
+      "path": "/userdata/aidemo/rknn_PPOCR-System_demo_native/lib/librknnrt.so",
+      "sha256": "3f465203344bf5a89f674dae7491b9092340b289bd4e781e78304ac2e123718b",
+      "kernel": "5.10.160",
+      "python": "3.9.2"
+    }
+  },
+  "paper_detector": {
+    "name": "DocAligner point regression lcnet050",
+    "source": "https://github.com/DocsaidLab/DocAligner",
+    "format": "onnx",
+    "backend": ["opencv_dnn_cpu", "onnxruntime_cpu"],
+    "path": "runtime/docaligner/lcnet050_p_multi_decoder_l3_d64_256_fp32.onnx",
+    "sha256": "32d186080ce16442674d4c0eaaaaac878eea289b56a8d1284f05fff1ff42e220",
+    "input": "img:float32[1,3,256,256]",
+    "outputs": ["points:float32[1,8]", "has_obj:float32[1,1]"],
+    "object_threshold": 0.5,
+    "runtime": {
+      "board": "ATK-DLRK3588",
+      "kernel": "5.10.160",
+      "python": "3.9.2",
+      "opencv": "4.5.1",
+      "numpy": "1.23.5",
+      "numpy_wheel_sha256": "bf837dc63ba5c06dc8797c398db1e223a466c7ece27a1f7b5232ba3466aafe3d",
+      "onnxruntime": "1.17.3",
+      "onnxruntime_wheel_sha256": "3ff2dc012bd930578aff5232afd2905bf16620815f36783a941aafabf94b3702",
+      "intra_op_threads": 1,
+      "inter_op_threads": 1,
+      "execution_mode": "sequential"
+    },
+    "benchmark": {
+      "date": "2026-08-18",
+      "iterations": 100,
+      "warmup": 10,
+      "model_load_ms": 603.355,
+      "mean_inference_ms": 17.683,
+      "p50_inference_ms": 17.683,
+      "p95_inference_ms": 17.74,
+      "peak_rss_mb": 151.16,
+      "sample_detected": true,
+      "sample_confidence": 0.923383
+    },
+    "service_probe": {
+      "duration_seconds": 20,
+      "snapshot_fps": 5,
+      "process_cpu_percent": 35.6,
+      "process_rss_kb": 150184,
+      "unstable_candidate_blocked": true
+    },
+    "capture_integration": {
+      "date": "2026-08-18",
+      "ppocr_endpoint": "http://127.0.0.1:5002/ocr",
+      "status": "accepted",
+      "verification": "two_pass_exact_match",
+      "attempt": 1,
+      "processed_frames": 14,
+      "identifier_length": 16,
+      "identifier_disclosed": false
+    },
+    "status": "board_verified"
+  },
+  "selection_gates": {
+    "accepted_identifier_precision": 0.995,
+    "primary_identifier_accuracy": 0.995,
+    "core_identifier_recall": 0.95,
+    "edge_peak_rss_gib": 3.2,
+    "edge_p95_seconds": 20.0
+  }
+}
